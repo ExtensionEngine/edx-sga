@@ -89,7 +89,16 @@ function StaffGradedAssignmentXBlock(runtime, element) {
         }
 
         function renderStaffGrading(data) {
-            $(".grade-modal").hide();
+            if (data.hasOwnProperty('error')) {
+              gradeFormError(data['error']);
+            } else {
+              gradeFormError('');
+              $('.grade-modal').hide();
+            }
+
+            if (data.display_name !== '') {
+                $('.sga-block .display_name').html(data.display_name);
+            }
 
             // Add download urls to template context
             data.downloadUrl = staffDownloadUrl;
@@ -132,6 +141,12 @@ function StaffGradedAssignmentXBlock(runtime, element) {
             });
         }
 
+        /* Just show error on enter grade dialog */
+        function gradeFormError(error) {
+            var form = $(element).find("#enter-grade-form");
+            form.find('.error').html(error);
+        }
+
         /* Click event handler for "enter grade" */
         function handleGradeEntry() {
             var row = $(this).parents("tr");
@@ -145,29 +160,32 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                 var max_score = row.parents("#grade-info").data("max_score");
                 var score = Number(form.find("#grade-input").val());
                 event.preventDefault();
-                if (isNaN(score)) {
-                    form.find(".error").html("<br/>Grade must be a number.");
-                }
-                else if (score != parseInt(score)) {
-                    form.find(".error").html("<br/>Grade must be an integer.");
-                }
-                else if (score < 0) {
-                    form.find(".error").html("<br/>Grade must be positive.");
-                }
-                else if (score > max_score) {
-                    form.find(".error").html("<br/>Maximum score is " + max_score);
-                }
-                else {
+                if (!score) {
+                    gradeFormError('<br/>Grade must be a number.');
+                } else if (score !== parseInt(score)) {
+                    gradeFormError('<br/>Grade must be an integer.');
+                } else if (score < 0) {
+                    gradeFormError('<br/>Grade must be positive.');
+                } else if (score > max_score) {
+                    gradeFormError('<br/>Maximum score is ' + max_score);
+                } else {
                     // No errors
                     $.post(enterGradeUrl, form.serialize())
                         .success(renderStaffGrading);
                 }
             });
-            form.find("#remove-grade").on("click", function() {
-                var url = removeGradeUrl + "?module_id=" +
-                    row.data("module_id") + "&student_id=" +
-                    row.data("student_id");
-                $.get(url).success(renderStaffGrading);
+            form.find('#remove-grade').on('click', function(event) {
+                var url = removeGradeUrl + '?module_id=' +
+                    row.data('module_id') + '&student_id=' +
+                    row.data('student_id');
+                event.preventDefault();
+                if (row.data('score')) {
+                  // if there is no grade then it is pointless to call api.
+                  gradeFormError('');
+                  $.get(url).success(renderStaffGrading);
+                } else {
+                    gradeFormError('<br/>No grade to remove.');
+                }
             });
             form.find("#enter-grade-cancel").on("click", function() {
                 /* We're kind of stretching the limits of leanModal, here,
@@ -184,12 +202,9 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                  *
                  * See: https://github.com/mitodl/edx-sga/issues/13
                  */
-
-                // Clean error message when "Cancel" is pressed.
-                form.find(".error").html("");
-
                 setTimeout(function() {
-                    $("#grade-submissions-button").click();
+                    $('#grade-submissions-button').click();
+                    gradeFormError('');
                 }, 225);
             });
         }
