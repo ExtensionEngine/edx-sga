@@ -13,6 +13,9 @@ import pytz
 
 from functools import partial
 
+from courseware.models import StudentModule
+
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.files import File
 from django.core.files.storage import default_storage
@@ -266,7 +269,10 @@ class StaffGradedXBlock(XBlock):
             """
             # Submissions doesn't have API for this, just use model directly.
             course_enrollments = CourseEnrollment.objects.filter(
-                course_id=self.course_id)
+                course_id=self.course_id
+            ).exclude(
+                Q(user__is_staff=True) | Q(user__is_superuser=True)
+            )
             for course_enrollment in course_enrollments:
                 student = course_enrollment.user
                 if not is_staff_or_instructor_on_course(student, self.course_id):
