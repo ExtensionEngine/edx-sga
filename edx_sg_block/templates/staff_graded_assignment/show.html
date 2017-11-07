@@ -27,38 +27,63 @@
 
   {% if is_course_staff %}
   <script type="text/template" id="sga-grading-tmpl">
-    <table class="gridtable tablesorter" id="submissions">
-      <thead>
-      <tr>
-        <th class="header">Username <i class="icon fa fa-sort"/></th>
-        <th class="header">Name <i class="icon fa fa-sort"/></th>
-        <th class="header">Grade <i class="icon fa fa-sort"/></th>
-        <th class="header">Instructor's comments <i class="icon fa fa-sort"/></th>
-        <th class="header" colspan="2">Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-      <% for (var i = 0; i < assignments.length; i++) { %>
-      <%     var assignment = assignments[i]; %>
-        <tr id="row-<%= assignment.module_id %>">
-          <td><%= assignment.username %></td>
-          <td><%= assignment.fullname %></td>
-          <td>
-            <% if (assignment.score !== null) { %>
-              <%= assignment.score %> /
-              <%= max_score %>
-            <% } %>
-          </td>
-          <td><%= assignment.comment %></td>
-          <td>
-            <a class="enter-grade-button button" href="#enter-grade-{{ id }}">
-              {% trans "Enter grade" %}
-            </a>
-          </td>
+    <form id="enter-grade-form">
+      <span class="error"></span>
+      <input id="module_id-input" type="hidden" name="module_id"/>
+      <input id="submission_id-input" type="hidden" name="submission_id"/>
+      <input id="grade-input" type="hidden" name="grade"/>
+      <input id="comment-input" type="hidden" name="comment"/>
+      <table class="gridtable tablesorter" id="submissions">
+        <thead>
+        <tr>
+          <th class="header">Username <i class="icon fa fa-sort"/></th>
+          <th class="header">Name <i class="icon fa fa-sort"/></th>
+          <th class="header">Grade <i class="icon fa fa-sort"/></th>
+          <th class="header">Instructor's comments <i class="icon fa fa-sort"/></th>
+          <th class="header" colspan="2">Actions</th>
         </tr>
-      <% } %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+        <% for (var i = 0; i < assignments.length; i++) { %>
+        <%     var assignment = assignments[i]; %>
+          <tr id="row-<%= assignment.module_id %>">
+            <td><%= assignment.username %></td>
+            <td><%= assignment.fullname %></td>
+            <td class="grade">
+              <span class="value" data-value="<%= assignment.score %>">
+                <% if (assignment.score !== null) { %>
+                  <%= assignment.score %> /
+                  <%= max_score %>
+                <% } %>
+              </span>
+              <span class="value-input hidden">
+                <input type="number" class="input-grade" placeholder="0-<%= max_score %>" value="<%= assignment.score %>">
+              </span>
+            </td>
+            <td class="comment">
+              <span class="value">
+                <%= assignment.comment %>
+              </span>
+              <span class="value-input hidden">
+                <textarea type="text" rows="1" class="input-comment" placeholder="Enter comment"><%= assignment.comment %></textarea>
+              </span>
+            </td>
+            <td>
+              <span class="option-btns">
+                <a class="enter-grade-button button" href="#enter-grade-{{ id }}">
+                  {% trans "Enter grade" %}
+                </a>
+                <button type="button" class="remove-grade" name="remove-grade">Remove grade</button>
+              </span>
+              <span class="editing-btns hidden">
+                <button type="submit" class="save-edit" name="save-edit">Save</button>
+                <button type="button" class="cancel-edit" name="cancel-edit">Cancel</button>
+              </span>
+            </td>
+          </tr>
+        <% } %>
+        </tbody>
+      </table>
   </script>
 
   <div aria-hidden="true" class="wrap-instructor-info">
@@ -99,34 +124,6 @@
           {% endfor %}
         </table><br/>
         category = {{category}}
-      </div>
-    </div>
-  </section>
-
-  <section aria-hidden="true" class="modal grade-modal" id="enter-grade-{{ id }}" tabindex="-1">
-    <div class="inner-wrapper" style="color: black">
-      <header><h2>
-        {% trans "Enter Grade" %}
-      </h2></header>
-      <br/>
-      <div style="display: block;">
-        <form id="enter-grade-form">
-          <input id="module_id-input" type="hidden" name="module_id"/>
-          <input id="submission_id-input" type="hidden" name="submission_id"/>
-          <div>Grade for <span id="student-name"/></div>
-          <div>Grade: <input id="grade-input" name="grade"/>
-            <span class="error"></span></div>
-          <div>Comment: <textarea id="comment-input" name="comment" rows="4"></textarea></div>
-          <div>
-            <button type="submit">{% trans "Submit" %}</button>
-            <button type="button" id="enter-grade-cancel">
-              {% trans "Cancel" %}
-            </button>
-            <button type="button" id="remove-grade">
-              {% trans "Remove grade" %}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   </section>

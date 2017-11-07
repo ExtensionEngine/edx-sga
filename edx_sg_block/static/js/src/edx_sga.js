@@ -54,10 +54,13 @@ function StaffGradedXBlock(runtime, element) {
                     .data(assignment);
             });
 
-            // Set up grade entry modal
+            // Handle 'Enter grade' button click.
             $(element).find('.enter-grade-button')
-                .leanModal({closeButton: '#enter-grade-cancel'})
                 .on('click', handleGradeEntry);
+
+            // Handle 'Remove grade' button click.
+            $(element).find('.remove-grade')
+                .on('click', removeGrade);
 
             // Set up annotated file upload
             $(element).find('#grade-info .fileupload').each(function() {
@@ -80,6 +83,7 @@ function StaffGradedXBlock(runtime, element) {
 
                 updateChangeEvent(fileUpload);
             });
+
             $.tablesorter.addParser({
               id: 'alphanum',
               is: function(s) {
@@ -111,71 +115,83 @@ function StaffGradedXBlock(runtime, element) {
             $("#submissions").trigger("sorton",[sorting]);
         }
 
-        /* Just show error on enter grade dialog */
+        /* Just show error in the error placeholder. */
         function gradeFormError(error) {
             var form = $(element).find("#enter-grade-form");
             form.find('.error').html(error);
+            $('button.save-edit').removeAttr('disabled');
+        }
+
+        function closeEditing() {
+            $('.value').removeClass('hidden');
+            $('.option-btns').removeClass('hidden');
+            $('.value-input').addClass('hidden');
+            $('.editing-btns').addClass('hidden');
+            $('button.save-edit').removeAttr('disabled');
+        }
+
+        function removeGrade(event) {
+            var $el = $(event.target);
+            var $row = $el.parents('tr');
+            var url = removeGradeUrl + '?module_id=' +
+                $row.data('module_id') + '&student_id=' +
+                $row.data('student_id');
+            event.preventDefault();
+            $el.attr('disabled', 'true');
+
+            if (Number($row.find('.grade .value').data('value'))) {
+              // if there is no grade then it is pointless to call api.
+              $.get(url).success(renderStaffGrading);
+            } else {
+                gradeFormError('No grade to remove.');
+                $el.removeAttr('disabled');
+            }
         }
 
         /* Click event handler for "enter grade" */
         function handleGradeEntry() {
-            var row = $(this).parents("tr");
-            var form = $(element).find("#enter-grade-form");
-            $(element).find('#student-name').text(row.data('fullname'));
-            form.find('#module_id-input').val(row.data('module_id'));
-            form.find('#submission_id-input').val(row.data('submission_id'));
-            form.find('#grade-input').val(row.data('score'));
-            form.find('#comment-input').text(row.data('comment'));
+            var $row = $(this).parents("tr");
+            var form = $("#enter-grade-form");
+
+            closeEditing();
+
+            $row.find('.value').addClass('hidden');
+            $row.find('.option-btns').addClass('hidden');
+            $row.find('.value-input').removeClass('hidden');
+            $row.find('.editing-btns').removeClass('hidden');
+
+            $row.find('button.cancel-edit').click(closeEditing);
+            $row.find('button.remove-grade').click(removeGrade);
+
+            form.find('#module_id-input').val($row.data('module_id'));
+            form.find('#submission_id-input').val($row.data('submission_id'));
             form.off('submit').on('submit', function(event) {
-                var max_score = row.parents('#grade-info').data('max_score');
-                var score = Number(form.find('#grade-input').val());
+                var max_score = $row.parents('#grade-info').data('max_score');
+                var score = Number($row.find('.input-grade').val());
+                var comment = $row.find('.input-comment').val();
+
                 event.preventDefault();
+                $row.find('button.save-edit').attr('disabled', 'true');
+
+                form.find('#grade-input').val(score);
+                form.find('#comment-input').val(comment);
+
                 if (!score && (score !== 0)) {
-                    gradeFormError('<br/>Grade must be a number.');
+                    gradeFormError('Grade must be a number.');
                 } else if (score !== parseInt(score)) {
-                    gradeFormError('<br/>Grade must be an integer.');
+                    gradeFormError('Grade must be an integer.');
                 } else if (score < 0) {
-                    gradeFormError('<br/>Grade must be positive.');
+                    gradeFormError('Grade must be positive.');
                 } else if (score > max_score) {
-                    gradeFormError('<br/>Maximum score is ' + max_score);
+                    gradeFormError('Maximum score is ' + max_score);
                 } else {
                     // No errors
                     $.post(enterGradeUrl, form.serialize())
                         .success(renderStaffGrading);
                 }
             });
-            form.find('#remove-grade').on('click', function(event) {
-                var url = removeGradeUrl + '?module_id=' +
-                    row.data('module_id') + '&student_id=' +
-                    row.data('student_id');
-                event.preventDefault();
-                if (row.data('score')) {
-                  // if there is no grade then it is pointless to call api.
-                  $.get(url).success(renderStaffGrading);
-                } else {
-                    gradeFormError('<br/>No grade to remove.');
-                }
-            });
-            form.find('#enter-grade-cancel').on('click', function() {
-                /* We're kind of stretching the limits of leanModal, here,
-                 * by nesting modals one on top of the other.  One side effect
-                 * is that when the enter grade modal is closed, it hides
-                 * the overlay for itself and for the staff grading modal,
-                 * so the overlay is no longer present to click on to close
-                 * the staff grading modal.  Since leanModal uses a fade out
-                 * time of 200ms to hide the overlay, our work around is to
-                 * wait 225ms and then just "click" the 'Grade Submissions'
-                 * button again.  It would also probably be pretty
-                 * straightforward to submit a patch to leanModal so that it
-                 * would work properly with nested modals.
-                 *
-                 * See: https://github.com/mitodl/edx-sga/issues/13
-                 */
-                setTimeout(function() {
-                    $('#grade-submissions-button').click();
-                    gradeFormError('');
-                }, 225);
-            });
+
+
         }
 
         function updateChangeEvent(fileUploadObj) {
