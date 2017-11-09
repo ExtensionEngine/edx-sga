@@ -1,10 +1,10 @@
 {% load i18n %}
 
-<div class="sga-block" data-state="{{ student_state }}" 
+<div class="sga-block" data-state="{{ student_state }}"
      data-staff="{{ is_course_staff }}">
   <script type="text/template" id="sga-tmpl">
     <% if (uploaded) { %>
-      <p><b>File uploaded</b> 
+      <p><b>File uploaded</b>
         <a href="<%= downloadUrl %>"><%= uploaded.filename %></a></p>
     <% } else { %>
       <p>No file has been uploaded.</p>
@@ -124,7 +124,7 @@
     </div>
   </section>
 
-  <section aria-hidden="true" class="modal staff-modal" 
+  <section aria-hidden="true" class="modal staff-modal"
            style="height: 80%" id="{{ id }}-debug">
     <div class="inner-wrapper" style="color: black">
       <header><h2>{% trans "Staff Debug" %}</h2></header>
