@@ -15,12 +15,13 @@ from functools import partial
 
 from courseware.models import StudentModule
 
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.template import Context, Template
 
-from student.models import user_by_anonymous_id
+from student.models import CourseEnrollment, user_by_anonymous_id
 from submissions import api as submissions_api
 from submissions.models import StudentItem as SubmissionsStudent
 
@@ -277,8 +278,33 @@ class StaffGradedAssignmentXBlock(XBlock):
                     'comment': state.get("comment", ''),
                 }
 
+        enrolled_students = CourseEnrollment.objects.users_enrolled_in(self.course_id).exclude(
+            Q(is_staff=True) | Q(is_superuser=True)
+        )
+        submitted_student_data = list(get_student_data())
+        submitted_student_ids = list(map((lambda x: user_by_anonymous_id(x['student_id']).id), submitted_student_data))
+        not_submitted_students = enrolled_students.exclude(id__in=submitted_student_ids)
+
+        assignments = submitted_student_data
+        for student in not_submitted_students:
+            assignments.append({
+                'module_id': None,
+                'student_id': student.id,
+                'submission_id': None,
+                'username': student.username,
+                'fullname': student.profile.name,
+                'filename': None,
+                'timestamp': None,
+                'score': None,
+                'approved': False,
+                'needs_approval': False,
+                'may_grade': False,
+                'annotated': None,
+                'comment': None,
+            })
+
         return {
-            'assignments': list(get_student_data()),
+            'assignments': assignments,
             'max_score': self.max_score(),
         }
 
