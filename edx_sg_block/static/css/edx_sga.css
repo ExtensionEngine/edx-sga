@@ -1,6 +1,6 @@
 /* CSS for StaffGradedXBlock */
 
-.sga-block .staff-modal {
+.sg-block .staff-modal {
     position: fixed;
     z-index:100;
     display: none;
@@ -12,13 +12,13 @@
     margin-left: 0px !important; /* important is necessary to override modal JS styling */
 }
 
-.sga-block .staff-modal .inner-wrapper {
+.sg-block .staff-modal .inner-wrapper {
     height: 100%;
     overflow-y: scroll;
     box-sizing: border-box;
 }
 
-.sga-block table.gridtable {
+.sg-block table.gridtable {
     font-family: verdana,arial,sans-serif;
     font-size:11px;
     color:#333333;
@@ -27,7 +27,7 @@
     border-collapse: collapse;
 }
 
-.sga-block table.gridtable th {
+.sg-block table.gridtable th {
     border-width: 1px;
     padding: 8px;
     border-style: solid;
@@ -35,7 +35,7 @@
     background-color: #dedede;
 }
 
-.sga-block table.gridtable td {
+.sg-block table.gridtable td {
     border-width: 1px;
     padding: 8px;
     border-style: solid;
@@ -43,36 +43,7 @@
     background-color: #ffffff;
 }
 
-.sga-block .upload {
-    position: relative;
-}
-
-.sga-block .upload button {
-    position: absolute;
-    top: 1px;
-    left: 0px;
-    z-index: 1;
-    cursor: pointer;
-}
-
-.sga-block .upload .fileupload {
-    position: relative;
-	-moz-opacity:0 ;
-	filter:alpha(opacity: 0);
-	opacity: 0;
-	z-index: 2;
-    width: 200px;
-    cursor: pointer;
-}
-
-.sga-block td .upload button {
-    padding: 3px;
-    width: 100%;
-    height: 20px;
-    cursor: pointer;
-}
-
-.sga-block .error {
+.sg-block .error {
     color: red;
 }
 
@@ -138,47 +109,47 @@
     color: #FFF;
 }
 
-.sga-block a.button {
+.sg-block a.button {
     line-height: 10px;
     height: 10px;
     cursor: pointer;
     color: #333!important;
 }
 
-.sga-block .display_name {
+.sg-block .display_name {
     color: inherit;
 }
 
-.sga-block table.tablesorter thead tr .header {
+.sg-block table.tablesorter thead tr .header {
  	cursor: pointer;
 }
 
-.sga-block table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+.sg-block table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
     background-color: #8dbdd8;
 }
 
-.sga-block table.gridtable td.grade,
-.sga-block table.gridtable td.comment {
+.sg-block table.gridtable td.grade,
+.sg-block table.gridtable td.comment {
   padding: 8px 4px;
 }
 
-#enter-grade-form .error {
+#sg-enter-grade-form .error {
   display: block;
   height: 20px;
 }
 
-#submissions .input-grade {
+#sg-submissions .input-grade {
   padding: 3px;
   width: 40px;
 }
 
-#submissions .editing-btns button {
+#sg-submissions .editing-btns button {
   width: 90px;
   height: 26px;
   padding: 6px 14px;
 }
 
-#submissions .input-comment {
+#sg-submissions .input-comment {
   margin: 0;
   height: auto;
   width: 135px;

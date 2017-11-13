@@ -1,8 +1,7 @@
 {% load i18n %}
 
-<div class="sga-block" data-state="{{ student_state }}" data-max-size="{{ max_file_size }}"
-     data-staff="{{ is_course_staff }}">
-  <script type="text/template" id="sga-tmpl">
+<div class="sg-block" data-state="{{ student_state }}" data-staff="{{ is_course_staff }}">
+  <script type="text/template" id="sg-tmpl">
     <% if (display_name) { %>
        <b><%= display_name %></b>
     <% } %>
@@ -11,10 +10,6 @@
         <% if (graded.comment) { %>
           <b>Instructor comment</b> <%= graded.comment %>
         <% } %>
-        <% if (annotated) { %><br/>
-          <b>Annotated file from instructor</b>
-          <a href="<%= annotatedUrl %>"><%= annotated.filename %></a>
-        <% } %>
       </p>
     <% } %>
     <% if (error) { %>
@@ -22,18 +17,18 @@
     <% } %>
   </script>
 
-  <div id="sga-content">
+  <div id="sg-content">
   </div>
 
   {% if is_course_staff %}
-  <script type="text/template" id="sga-grading-tmpl">
-    <form id="enter-grade-form">
+  <script type="text/template" id="sg-grading-tmpl">
+    <form id="sg-enter-grade-form">
       <span class="error"></span>
       <input id="module_id-input" type="hidden" name="module_id"/>
       <input id="submission_id-input" type="hidden" name="submission_id"/>
       <input id="grade-input" type="hidden" name="grade"/>
       <input id="comment-input" type="hidden" name="comment"/>
-      <table class="gridtable tablesorter" id="submissions">
+      <table class="gridtable tablesorter" id="sg-submissions">
         <thead>
         <tr>
           <th class="header">Username <i class="icon fa fa-sort"/></th>
@@ -70,14 +65,14 @@
             </td>
             <td>
               <span class="option-btns">
-                <a class="enter-grade-button button" href="#enter-grade-{{ id }}">
+                <a class="sg-enter-grade-button button" href="#enter-grade-{{ id }}">
                   {% trans "Enter grade" %}
                 </a>
-                <button type="button" class="remove-grade" name="remove-grade">Remove grade</button>
+                <button type="button" class="sg-remove-grade" name="sg-remove-grade">Remove grade</button>
               </span>
               <span class="editing-btns hidden">
-                <button type="submit" class="save-edit" name="save-edit">Save</button>
-                <button type="button" class="cancel-edit" name="cancel-edit">Cancel</button>
+                <button type="submit" class="sg-save-edit" name="sg-save-edit">Save</button>
+                <button type="button" class="sg-cancel-edit" name="sg-cancel-edit">Cancel</button>
               </span>
             </td>
           </tr>
@@ -97,7 +92,7 @@
     <div class="inner-wrapper" style="color: black; overflow: auto;">
       <header><h2><span class="display_name">{{ display_name }}</span> - {% trans "Staff Graded Points" %}</h2></header>
       <br/>
-      <div id="grade-info" style="display: block;">
+      <div id="sg-grade-info" style="display: block;">
         Loading...
       </div>
     </div>
