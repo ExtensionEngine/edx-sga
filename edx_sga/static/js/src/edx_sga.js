@@ -213,21 +213,23 @@ function StaffGradedAssignmentXBlock(runtime, element) {
         });
     }
 
-    if (require === undefined) { 
+    if (require === undefined) {
         /** 
          * The LMS does not use require.js (although it loads it...) and
          * does not already load jquery.fileupload.  (It looks like it uses
          * jquery.ajaxfileupload instead.  But our XBlock uses 
          * jquery.fileupload.
          */
-        function loadjs(url) {
-            $("<script>")
-                .attr("type", "text/javascript")
-                .attr("src", url)
-                .appendTo(element);
+        if (jQuery().fileupload === undefined) {
+            function loadjs(url) {
+                $("<script>")
+                    .attr("type", "text/javascript")
+                    .attr("src", url)
+                    .appendTo(element);
+            }
+            loadjs("/static/js/vendor/jQuery-File-Upload/js/jquery.iframe-transport.js");
+            loadjs("/static/js/vendor/jQuery-File-Upload/js/jquery.fileupload.js");
         }
-        loadjs("/static/js/vendor/jQuery-File-Upload/js/jquery.iframe-transport.js");
-        loadjs("/static/js/vendor/jQuery-File-Upload/js/jquery.fileupload.js");
         xblock($, _);
     }
     else {
