@@ -8,6 +8,8 @@
     overflow:auto;
 }
 
+.sga-block #grade-info { margin-bottom: 20px; }
+
 .sga-block table.gridtable {
     font-family: verdana,arial,sans-serif;
     font-size:11px;
@@ -59,4 +61,8 @@
 
 .sga-block .error {
     color: red;
+}
+
+.sga-block .download-buttons button{
+    margin-right: 20px;
 }

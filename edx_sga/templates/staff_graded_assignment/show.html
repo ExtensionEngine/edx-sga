@@ -47,6 +47,7 @@
   <script type="text/template" id="sga-grading-tmpl">
     <table class="gridtable">
       <tr>
+        <th></th>
         <th>Username</th>
         <th>Name</th>
         <th>Filename</th>
@@ -56,13 +57,21 @@
         <th>Annotated</th>
       </tr>
       <% for (var i = 0; i < assignments.length; i++) { %>
-      <%     var assignment = assignments[i]; %>
+      <%     
+        var assignment = assignments[i],
+            submissionUrl = downloadUrl + '?student_id=' + assignment.student_id;
+      %>
         <tr id="row-<%= assignment.module_id %>">
+          <td>
+            <% if (assignment.filename) { %>
+              <input type="checkbox" id="<%= assignment.username %>" name="submission" value="<%= submissionUrl %>">
+            <% } %>
+          </td>
           <td><%= assignment.username %></td>
           <td><%= assignment.fullname %></td>
           <td>
             <% if (assignment.filename) { %>
-              <a href="<%= downloadUrl %>?student_id=<%= assignment.student_id %>">
+              <a href="<%= submissionUrl %>">
                 <%= assignment.filename %>
               </a>
             <% } %>
@@ -120,6 +129,10 @@
       <br/>
       <div id="grade-info" style="display: block;">
         Loading...
+      </div>
+      <div class="download-buttons">
+        <button id="download-selected-submissions" disabled>Download selected submissions</button>
+        <button id="download-all-submissions">Download all submissions</button>
       </div>
     </div>
   </section>
