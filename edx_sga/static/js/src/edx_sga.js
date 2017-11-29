@@ -42,8 +42,8 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                 },
                 fail: function(e, data) {
                     /**
-                     * Nginx and other sanely implemented servers return a 
-                     * "413 Request entity too large" status code if an 
+                     * Nginx and other sanely implemented servers return a
+                     * "413 Request entity too large" status code if an
                      * upload exceeds its limit.  See the 'done' handler for
                      * the not sane way that Django handles the same thing.
                      */
@@ -66,13 +66,13 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                     }
                     render(state);
                 },
-                done: function(e, data) { 
+                done: function(e, data) {
                     /* When you try to upload a file that exceeds Django's size
                      * limit for file uploads, Django helpfully returns a 200 OK
                      * response with a JSON payload of the form:
-                     * 
+                     *
                      *   {'success': '<error message'}
-                     * 
+                     *
                      * Thanks Obama!
                      */
                     if (data.result.success !== undefined) {
@@ -82,7 +82,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                     }
                     else {
                         // The happy path, no errors
-                        render(data.result); 
+                        render(data.result);
                     }
                 }
             });
@@ -121,11 +121,11 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                         var percent = parseInt(data.loaded / data.total * 100, 10);
                         row.find(".upload").text("Uploading... " + percent + "%");
                     },
-                    done: function(e, data) { 
+                    done: function(e, data) {
                         // Add a time delay so user will notice upload finishing
                         // for small files
                         setTimeout(
-                            function() { renderStaffGrading(data.result); }, 
+                            function() { renderStaffGrading(data.result); },
                             3000)
                     }
                 });
@@ -147,7 +147,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                 event.preventDefault();
                 if (isNaN(score)) {
                     form.find(".error").html("<br/>Grade must be a number.");
-                } 
+                }
                 else if (score != parseInt(score)) {
                     form.find(".error").html("<br/>Grade must be an integer.");
                 }
@@ -164,8 +164,8 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                 }
             });
             form.find("#remove-grade").on("click", function() {
-                var url = removeGradeUrl + "?module_id=" + 
-                    row.data("module_id") + "&student_id=" + 
+                var url = removeGradeUrl + "?module_id=" +
+                    row.data("module_id") + "&student_id=" +
                     row.data("student_id");
                 $.get(url).success(renderStaffGrading);
             });
@@ -176,16 +176,20 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                  * the overlay for itself and for the staff grading modal,
                  * so the overlay is no longer present to click on to close
                  * the staff grading modal.  Since leanModal uses a fade out
-                 * time of 200ms to hide the overlay, our work around is to 
+                 * time of 200ms to hide the overlay, our work around is to
                  * wait 225ms and then just "click" the 'Grade Submissions'
-                 * button again.  It would also probably be pretty 
+                 * button again.  It would also probably be pretty
                  * straightforward to submit a patch to leanModal so that it
                  * would work properly with nested modals.
                  *
                  * See: https://github.com/mitodl/edx-sga/issues/13
                  */
+
+                // Clean error message when "Cancel" is pressed.
+                form.find(".error").html("");
+
                 setTimeout(function() {
-                    $("#grade-submissions-button").click(); 
+                    $("#grade-submissions-button").click();
                 }, 225);
             });
         }
@@ -214,10 +218,10 @@ function StaffGradedAssignmentXBlock(runtime, element) {
     }
 
     if (require === undefined) {
-        /** 
+        /**
          * The LMS does not use require.js (although it loads it...) and
          * does not already load jquery.fileupload.  (It looks like it uses
-         * jquery.ajaxfileupload instead.  But our XBlock uses 
+         * jquery.ajaxfileupload instead.  But our XBlock uses
          * jquery.fileupload.
          */
         if (jQuery().fileupload === undefined) {
