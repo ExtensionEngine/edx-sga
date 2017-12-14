@@ -64,7 +64,7 @@
         <tr id="row-<%= assignment.module_id %>">
           <td>
             <% if (assignment.filename) { %>
-              <input type="checkbox" id="<%= assignment.username %>" name="submission" value="<%= submissionUrl %>">
+              <input type="checkbox" class="submission-checkbox" value="<%= assignment.student_id %>">
             <% } %>
           </td>
           <td><%= assignment.username %></td>
@@ -132,7 +132,7 @@
       </div>
       <div class="download-buttons">
         <button id="download-selected-submissions" disabled>Download selected submissions</button>
-        <button id="download-all-submissions">Download all submissions</button>
+        <button id="download-all-submissions" disabled>Download all submissions</button>
       </div>
     </div>
   </section>
