@@ -9,7 +9,7 @@
     <% } else { %>
       <p>No file has been uploaded.</p>
     <% } %>
-    <% if (graded) { %>
+    <% if (graded && gradesPublished) { %>
       <p>Your score is <%= graded.score %> / <%= max_score %><br/>
         <% if (graded.comment) { %>
           <b>Instructor's comment</b> <%= graded.comment %>
@@ -57,7 +57,7 @@
         <th>Annotated</th>
       </tr>
       <% for (var i = 0; i < assignments.length; i++) { %>
-      <%     
+      <%
         var assignment = assignments[i],
             submissionUrl = downloadUrl + '?student_id=' + assignment.student_id;
       %>
@@ -128,7 +128,13 @@
   <section aria-hidden="true" class="modal staff-modal" id="{{ id }}-grade" style="height: 75%">
     <div class="inner-wrapper" style="color: black; overflow: auto;">
       <header><h2>{% trans "Staff Graded Assignment" %}</h2></header>
-      <br/>
+      <br>
+      <div class="grades-published">
+        <label>
+          <input name="grades-published" type="checkbox" {% if grades_published %}checked{% endif %}>
+          Publish grades
+        </label>
+      </div>
       <div id="grade-info" style="display: block;">
         Loading...
       </div>

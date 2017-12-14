@@ -73,6 +73,7 @@
     color: red;
 }
 
+.sga-block .grades-published,
 .sga-block .download-buttons {
     margin: 0 40px 10px;
 }
