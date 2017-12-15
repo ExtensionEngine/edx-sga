@@ -369,7 +369,7 @@ class StaffGradedAssignmentXBlock(XBlock):
     @XBlock.handler
     def update_grades_published(self, request, suffix=''):
         self.grades_published = bool(strtobool(request.params.get('grades_published')))
-        return Response()
+        return Response(status=200)
 
     @XBlock.handler
     def upload_assignment(self, request, suffix=''):
