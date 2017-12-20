@@ -10,32 +10,28 @@ import mimetypes
 import os
 import pkg_resources
 import pytz
-
-from functools import partial
+import StringIO
+import zipfile
 
 from courseware.models import StudentModule
-
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.template import Context, Template
-
+from functools import partial
 from student.models import CourseEnrollment, user_by_anonymous_id
 from submissions import api as submissions_api
 from submissions.models import StudentItem as SubmissionsStudent
-
 from webob.response import Response
-
 from xblock.core import XBlock
 from xblock.exceptions import JsonHandlerError
 from xblock.fields import DateTime, Scope, String, Float, Integer
 from xblock.fragment import Fragment
-
 from xmodule.util.duedate import get_extended_due_date
 
-
 log = logging.getLogger(__name__)
+BLOCK_SIZE = 2**10 * 8  # 8kb
 
 
 def reify(meth):
@@ -434,13 +430,66 @@ class StaffGradedAssignmentXBlock(XBlock):
         )
 
     def download(self, path, mimetype, filename):
-        BLOCK_SIZE = (1 << 10) * 8  # 8kb
-        file = default_storage.open(path)
-        app_iter = iter(partial(file.read, BLOCK_SIZE), '')
+        student_file = default_storage.open(path)
+        app_iter = iter(partial(student_file.read, BLOCK_SIZE), '')
         return Response(
             app_iter=app_iter,
             content_type=mimetype,
             content_disposition="attachment; filename=" + filename)
+
+    @XBlock.handler
+    def download_submissions(self, request, suffix=''):
+        require(self.is_course_staff())
+        student_ids = json.loads(request.body).get('student_ids', [])
+        files = self.get_files(self.get_submissions(student_ids))
+        return self.download_zip(files)
+
+    @XBlock.handler
+    def download_all_submissions(self, request, suffix=''):
+        require(self.is_course_staff())
+        files = self.get_files(self.get_submissions())
+        return self.download_zip(files)
+
+    def get_submissions(self, student_ids=None):
+        all_students = SubmissionsStudent.objects.filter(course_id=self.course_id, item_id=self.block_id)
+        students = all_students.filter(student_id__in=student_ids) if student_ids else all_students
+        submissions = []
+        for student in students:
+            submission_data = self.get_submission(student.student_id)
+            if submission_data:
+                user = user_by_anonymous_id(student.student_id)
+                submissions.append({
+                    'username': user.username,
+                    'data': submission_data
+                })
+        return submissions
+
+    def get_files(self, submissions):
+        files = []
+        for submission in submissions:
+            answer = submission['data']['answer']
+            path = self._file_storage_path(answer['sha1'], answer['filename'])
+            files.append({
+                'path': default_storage.path(path),
+                'name': '{}-{}'.format(submission['username'], answer['filename'])
+            })
+        return files
+
+    def download_zip(self, student_files):
+        zip_subdir = 'student_submissions'
+        zip_filename = '{}.zip'.format(zip_subdir)
+
+        # create StringIO object to serve as in-memory zip file
+        sio = StringIO.StringIO()
+
+        # add files to zip
+        with zipfile.ZipFile(sio, 'w') as zf:
+            for student_file in student_files:
+                zip_path = os.path.join(zip_subdir, student_file['name'])
+                zf.write(student_file['path'], zip_path)
+
+        # save zip file and return its URL as JSON response
+        return Response(json={'zip_url': default_storage.url(default_storage.save(zip_filename, sio))})
 
     @XBlock.handler
     def get_staff_grading_data(self, request, suffix=''):
@@ -542,7 +591,6 @@ class StaffGradedAssignmentXBlock(XBlock):
 
 
 def _get_sha1(file):
-    BLOCK_SIZE = 2**10 * 8  # 8kb
     sha1 = hashlib.sha1()
     for block in iter(partial(file.read, BLOCK_SIZE), ''):
         sha1.update(block)

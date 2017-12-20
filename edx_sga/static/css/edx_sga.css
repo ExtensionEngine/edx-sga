@@ -2,24 +2,36 @@
 
 .sga-block .staff-modal {
     position: fixed;
-    z-index:100;
+    z-index: 100;
     display: none;
     width: 80%;
-    overflow:auto;
+    overflow: hidden;
+    left: 10% !important;
+    margin-left: 0 !important;
+}
+
+.sga-block .staff-modal .inner-wrapper {
+    height: 100%;
+    overflow-y: scroll;
+    box-sizing: border-box;
+}
+
+.sga-block #grade-info {
+    margin: 0 40px 20px 40px;
 }
 
 .sga-block table.gridtable {
-    font-family: verdana,arial,sans-serif;
-    font-size:11px;
-    color:#333333;
+    font-family: verdana, arial, sans-serif;
+    font-size: 11px;
+    color: #333333;
     border-width: 1px;
     border-color: #666666;
     border-collapse: collapse;
 }
 
 .sga-block table.gridtable th {
-    border-width: 1px;
     padding: 8px;
+    border-width: 1px;
     border-style: solid;
     border-color: #666666;
     background-color: #dedede;
@@ -39,17 +51,17 @@
 
 .sga-block .upload button {
     position: absolute;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
     z-index: 1;
 }
 
 .sga-block .upload .fileupload {
     position: relative;
-	-moz-opacity:0 ;
-	filter:alpha(opacity: 0);
-	opacity: 0;
-	z-index: 2;
+    -moz-opacity: 0;
+    filter: alpha(opacity:0);
+    opacity: 0;
+    z-index: 2;
 }
 
 .sga-block td .upload button {
@@ -59,4 +71,12 @@
 
 .sga-block .error {
     color: red;
+}
+
+.sga-block .download-buttons {
+    margin: 0 40px 10px;
+}
+
+.sga-block .download-buttons button {
+    margin-right: 20px;
 }

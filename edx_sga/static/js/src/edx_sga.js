@@ -8,6 +8,8 @@ function StaffGradedAssignmentXBlock(runtime, element) {
         var staffDownloadUrl = runtime.handlerUrl(element, 'staff_download');
         var staffAnnotatedUrl = runtime.handlerUrl(element, 'staff_download_annotated');
         var staffUploadUrl = runtime.handlerUrl(element, 'staff_upload_annotated');
+        var downloadSubmissionsUrl = runtime.handlerUrl(element, 'download_submissions');
+        var downloadAllSubmissionsUrl = runtime.handlerUrl(element, 'download_all_submissions');
         var enterGradeUrl = runtime.handlerUrl(element, 'enter_grade');
         var removeGradeUrl = runtime.handlerUrl(element, 'remove_grade');
         var template = _.template($(element).find("#sga-tmpl").text());
@@ -137,6 +139,37 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                             function() { renderStaffGrading(data.result); },
                             3000)
                     }
+                });
+            });
+
+            // Set up submission download checkboxes and buttons
+            var $submissionCheckboxes = $("#grade-info .submission-checkbox");
+            $submissionCheckboxes.on("change", function() {
+                if ($submissionCheckboxes.filter(":checked").length > 0) {
+                    $("button#download-selected-submissions").prop("disabled", false);
+                }
+                else {
+                    $("button#download-selected-submissions").prop("disabled", true);
+                }
+            });
+            if ($submissionCheckboxes.length > 0) {
+                $("button#download-all-submissions").prop("disabled", false);
+            }
+            // Fix for "Download selected submissions" button when re-rendering SGA modal content
+            $submissionCheckboxes.trigger("change");
+
+            $("button#download-selected-submissions").on("click", function() {
+                var student_ids = [];
+                $submissionCheckboxes.filter(":checked").each(function() {
+                    student_ids.push($(this).val());
+                });
+                $.post(downloadSubmissionsUrl, JSON.stringify({'student_ids': student_ids})).done(function(data) {
+                    window.location = window.location.origin + data.zip_url;
+                });
+            });
+            $("button#download-all-submissions").on("click", function() {
+                $.get(downloadAllSubmissionsUrl).done(function (data) {
+                    window.location = window.location.origin + data.zip_url;
                 });
             });
         }
