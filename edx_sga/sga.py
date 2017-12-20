@@ -451,17 +451,17 @@ class StaffGradedAssignmentXBlock(XBlock):
         return self.download_zip(files)
 
     def get_submissions(self, student_ids=None):
-        students = SubmissionsStudent.objects.filter(course_id=self.course_id, item_id=self.block_id)
+        all_students = SubmissionsStudent.objects.filter(course_id=self.course_id, item_id=self.block_id)
+        students = all_students.filter(student_id__in=student_ids) if student_ids else all_students
         submissions = []
         for student in students:
-            if not student_ids or student.student_id in student_ids:
-                submission_data = self.get_submission(student.student_id)
-                if submission_data:
-                    user = user_by_anonymous_id(student.student_id)
-                    submissions.append({
-                        'username': user.username,
-                        'data': submission_data
-                    })
+            submission_data = self.get_submission(student.student_id)
+            if submission_data:
+                user = user_by_anonymous_id(student.student_id)
+                submissions.append({
+                    'username': user.username,
+                    'data': submission_data
+                })
         return submissions
 
     def get_files(self, submissions):
