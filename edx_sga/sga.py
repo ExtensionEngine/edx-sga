@@ -333,7 +333,7 @@ class StaffGradedAssignmentXBlock(XBlock):
                 )
             )
             fragment.add_javascript(_resource("static/js/src/studio.js"))
-            fragment.initialize_js('StaffGradedAssignmentXBlock')
+            fragment.initialize_js('StaffGradedAssignmentXBlockStudio')
             return fragment
         except:  # pragma: NO COVER
             log.error("Don't swallow my exceptions", exc_info=True)
