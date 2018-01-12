@@ -15,6 +15,7 @@ import zipfile
 
 from courseware.models import StudentModule
 from django.db.models import Q
+from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.files import File
 from django.core.files.storage import default_storage
@@ -32,6 +33,7 @@ from xmodule.util.duedate import get_extended_due_date
 
 log = logging.getLogger(__name__)
 BLOCK_SIZE = 2**10 * 8  # 8kb
+DATETIME_FORMAT = '%m/%d/%Y %-I:%M%p'
 
 
 def reify(meth):
@@ -256,6 +258,7 @@ class StaffGradedAssignmentXBlock(XBlock):
                 else:
                     needs_approval = False
                 instructor = self.is_instructor()
+                downloaded = self.get_submission_download_status(student.student_id)
                 yield {
                     'module_id': module.id,
                     'student_id': student.student_id,
@@ -263,9 +266,8 @@ class StaffGradedAssignmentXBlock(XBlock):
                     'username': module.student.username,
                     'fullname': module.student.profile.name,
                     'filename': submission['answer']["filename"],
-                    'timestamp': submission['created_at'].strftime(
-                        DateTime.DATETIME_FORMAT
-                    ),
+                    'downloaded': downloaded,
+                    'timestamp': submission['created_at'].strftime(DATETIME_FORMAT).lower(),
                     'score': score,
                     'approved': approved,
                     'needs_approval': instructor and needs_approval,
@@ -290,6 +292,7 @@ class StaffGradedAssignmentXBlock(XBlock):
                 'username': student.username,
                 'fullname': student.profile.name,
                 'filename': None,
+                'downloaded': False,
                 'timestamp': None,
                 'score': None,
                 'approved': False,
@@ -412,6 +415,7 @@ class StaffGradedAssignmentXBlock(XBlock):
         submission = self.get_submission(request.params['student_id'])
         answer = submission['answer']
         path = self._file_storage_path(answer['sha1'], answer['filename'])
+        self.set_submission_status_to_downloaded(request.params['student_id'])
         return self.download(path, answer['mimetype'], answer['filename'])
 
     @XBlock.handler
@@ -457,6 +461,7 @@ class StaffGradedAssignmentXBlock(XBlock):
         for student in students:
             submission_data = self.get_submission(student.student_id)
             if submission_data:
+                self.set_submission_status_to_downloaded(student.student_id)
                 user = user_by_anonymous_id(student.student_id)
                 submissions.append({
                     'username': user.username,
@@ -490,6 +495,12 @@ class StaffGradedAssignmentXBlock(XBlock):
 
         # save zip file and return its URL as JSON response
         return Response(json={'zip_url': default_storage.url(default_storage.save(zip_filename, sio))})
+
+    def get_submission_download_status(self, student_id):
+        return submissions_api.get_download_status(self.student_submission_id(student_id), self.user)
+
+    def set_submission_status_to_downloaded(self, student_id):
+        submissions_api.set_as_downloaded(self.student_submission_id(student_id), self.user)
 
     @XBlock.handler
     def get_staff_grading_data(self, request, suffix=''):
@@ -558,6 +569,10 @@ class StaffGradedAssignmentXBlock(XBlock):
         module.state = json.dumps(state)
         module.save()
         return Response(json_body=self.staff_grading_data())
+
+    @property
+    def user(self):
+        return User.objects.get(id=self.xmodule_runtime.user_id)
 
     def is_course_staff(self):
         return getattr(self.xmodule_runtime, 'user_is_staff', False)
