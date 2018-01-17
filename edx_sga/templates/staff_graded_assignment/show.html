@@ -12,7 +12,7 @@
     <% if (graded) { %>
       <p>Your score is <%= graded.score %> / <%= max_score %><br/>
         <% if (graded.comment) { %>
-          <b>Instructor comment</b> <%= graded.comment %>
+          <b>Instructor's comment</b> <%= graded.comment %>
         <% } %>
         <% if (annotated) { %><br/>
           <b>Annotated file from instructor</b>
@@ -53,7 +53,7 @@
         <th>Filename</th>
         <th>Uploaded</th>
         <th>Grade</th>
-        <th>Instructor's comments</th>
+        <th>Comment</th>
         <th>Annotated</th>
       </tr>
       <% for (var i = 0; i < assignments.length; i++) { %>
@@ -71,7 +71,9 @@
           <td><%= assignment.fullname %></td>
           <td>
             <% if (assignment.filename) { %>
-              <a href="<%= submissionUrl %>">
+              <i class="fa fa-check-circle submission-downloaded<% if (!assignment.downloaded) { %> hidden<% } %>"
+                 aria-hidden="true"></i>
+              <a href="<%= submissionUrl %>" class="submission-filename">
                 <%= assignment.filename %>
               </a>
             <% } %>

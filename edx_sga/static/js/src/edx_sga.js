@@ -142,36 +142,55 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                 });
             });
 
-            // Set up submission download checkboxes and buttons
-            var $submissionCheckboxes = $("#grade-info .submission-checkbox");
+            // Submission download variables
+            var $submissionCheckboxes = $(".submission-checkbox", element);
+            var $submissionFilenames = $(".submission-filename", element);
+            var $downloadSelectedSubmissionsButton = $("button#download-selected-submissions", element);
+            var $downloadAllSubmissionsButton = $("button#download-all-submissions", element);
+
+            // Set up submission download links, checkboxes and buttons
+            $submissionFilenames.on("click", function () {
+                showSubmissionDownloadedCheckmark($(this));
+            });
             $submissionCheckboxes.on("change", function() {
                 if ($submissionCheckboxes.filter(":checked").length > 0) {
-                    $("button#download-selected-submissions").prop("disabled", false);
+                    $downloadSelectedSubmissionsButton.prop("disabled", false);
                 }
                 else {
-                    $("button#download-selected-submissions").prop("disabled", true);
+                    $downloadSelectedSubmissionsButton.prop("disabled", true);
                 }
             });
             if ($submissionCheckboxes.length > 0) {
-                $("button#download-all-submissions").prop("disabled", false);
+                $downloadAllSubmissionsButton.prop("disabled", false);
             }
             // Fix for "Download selected submissions" button when re-rendering SGA modal content
             $submissionCheckboxes.trigger("change");
 
-            $("button#download-selected-submissions").on("click", function() {
+            $downloadSelectedSubmissionsButton.on("click", function() {
                 var student_ids = [];
                 $submissionCheckboxes.filter(":checked").each(function() {
+                    var $submissionFilename = $(this).closest("tr").find(".submission-filename");
+                    showSubmissionDownloadedCheckmark($submissionFilename);
                     student_ids.push($(this).val());
                 });
-                $.post(downloadSubmissionsUrl, JSON.stringify({'student_ids': student_ids})).done(function(data) {
+                $.post(downloadSubmissionsUrl, JSON.stringify({"student_ids": student_ids})).done(function(data) {
                     window.location = window.location.origin + data.zip_url;
                 });
             });
-            $("button#download-all-submissions").on("click", function() {
+            $downloadAllSubmissionsButton.on("click", function() {
+                $submissionFilenames.each(function() {
+                    showSubmissionDownloadedCheckmark($(this));
+                });
                 $.get(downloadAllSubmissionsUrl).done(function (data) {
                     window.location = window.location.origin + data.zip_url;
                 });
             });
+        }
+
+        function showSubmissionDownloadedCheckmark($submissionFilename) {
+            if ($submissionFilename.prev(".submission-downloaded").hasClass("hidden")) {
+                $submissionFilename.prev(".submission-downloaded").removeClass("hidden");
+            }
         }
 
         /* Just show error on enter grade dialog */
