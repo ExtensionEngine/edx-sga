@@ -13,8 +13,6 @@ import pytz
 import StringIO
 import zipfile
 
-from functools import partial
-
 from courseware.models import StudentModule
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -368,7 +366,7 @@ class StaffGradedAssignmentXBlock(XBlock):
 
     @XBlock.handler
     def update_grades_published(self, request, suffix=''):
-        self.grades_published = bool(strtobool(request.params.get('grades_published')))
+        self.grades_published = json.loads(request.params.get('grades_published'))
         return Response(status=200)
 
     @XBlock.handler

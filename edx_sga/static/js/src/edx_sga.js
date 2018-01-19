@@ -1,5 +1,5 @@
 /* Javascript for StaffGradedAssignmentXBlock. */
-function StaffGradedAssignmentXBlock(runtime, element, backendData) {
+function StaffGradedAssignmentXBlock(runtime, element, options) {
     function xblock($, _) {
         var annotatedUrl = runtime.handlerUrl(element, 'download_annotated');
         var downloadAllSubmissionsUrl = runtime.handlerUrl(element, 'download_all_submissions');
@@ -13,21 +13,21 @@ function StaffGradedAssignmentXBlock(runtime, element, backendData) {
         var staffDownloadUrl = runtime.handlerUrl(element, 'staff_download');
         var staffUploadUrl = runtime.handlerUrl(element, 'staff_upload_annotated');
         var template = _.template($(element).find("#sga-tmpl").text());
+        var updateGradesPublishedUrl = runtime.handlerUrl(element, 'update_grades_published');
         var uploadUrl = runtime.handlerUrl(element, 'upload_assignment');
-        var updateGradesPublishedUrl = runtime.handlerUrl(element, 'update_grades_published')
 
         function render(state) {
             // Add download urls to template context
             state.downloadUrl = downloadUrl;
             state.annotatedUrl = annotatedUrl;
             state.error = state.error ? state.error : false;
-            state.gradesPublished = backendData.gradesPublished;
+            state.gradesPublished = options.gradesPublished;
 
             // Render template
             var content = $(element).find("#sga-content").html(template(state));
 
             // Save grades published value when checkbox clicked
-            $('#grades-published').change(function() {
+            $('input[name=grades-published]', element).change(function() {
                 var url = updateGradesPublishedUrl + '?grades_published=' + this.checked;
 
                 $.get(url, function() {

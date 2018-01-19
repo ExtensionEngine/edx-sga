@@ -57,7 +57,7 @@
         <th>Annotated</th>
       </tr>
       <% for (var i = 0; i < assignments.length; i++) { %>
-      <%     
+      <%
         var assignment = assignments[i],
             submissionUrl = downloadUrl + '?student_id=' + assignment.student_id;
       %>
@@ -130,9 +130,9 @@
       <header><h2>{% trans "Staff Graded Assignment" %}</h2></header>
       <br>
 
-      <div class="grades_published">
-        <label for="grades-published">Grades published:</label>
-        <input id="grades-published" name="grades_published" type="checkbox" {% if grades_published %} checked {% endif %}>
+      <div class="grades-published">
+        <input name="grades-published" type="checkbox" {% if grades_published %} checked {% endif %}>
+        <label for="grades-published">{% trans "Publish grades" %}</label>
       </div>
 
       <div id="grade-info" style="display: block;">
