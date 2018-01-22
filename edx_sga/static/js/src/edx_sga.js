@@ -1,41 +1,28 @@
 /* Javascript for StaffGradedAssignmentXBlock. */
-function StaffGradedAssignmentXBlock(runtime, element, options) {
+function StaffGradedAssignmentXBlock(runtime, element) {
     function xblock($, _) {
-        var annotatedUrl = runtime.handlerUrl(element, 'download_annotated');
-        var downloadAllSubmissionsUrl = runtime.handlerUrl(element, 'download_all_submissions');
-        var downloadSubmissionsUrl = runtime.handlerUrl(element, 'download_submissions');
-        var downloadUrl = runtime.handlerUrl(element, 'download_assignment');
-        var enterGradeUrl = runtime.handlerUrl(element, 'enter_grade');
-        var getStaffGradingUrl = runtime.handlerUrl(element, 'get_staff_grading_data');
-        var gradingTemplate;
-        var removeGradeUrl = runtime.handlerUrl(element, 'remove_grade');
-        var staffAnnotatedUrl = runtime.handlerUrl(element, 'staff_download_annotated');
-        var staffDownloadUrl = runtime.handlerUrl(element, 'staff_download');
-        var staffUploadUrl = runtime.handlerUrl(element, 'staff_upload_annotated');
-        var template = _.template($(element).find("#sga-tmpl").text());
-        var updateGradesPublishedUrl = runtime.handlerUrl(element, 'update_grades_published');
         var uploadUrl = runtime.handlerUrl(element, 'upload_assignment');
+        var downloadUrl = runtime.handlerUrl(element, 'download_assignment');
+        var annotatedUrl = runtime.handlerUrl(element, 'download_annotated');
+        var getStaffGradingUrl = runtime.handlerUrl(element, 'get_staff_grading_data');
+        var staffDownloadUrl = runtime.handlerUrl(element, 'staff_download');
+        var staffAnnotatedUrl = runtime.handlerUrl(element, 'staff_download_annotated');
+        var staffUploadUrl = runtime.handlerUrl(element, 'staff_upload_annotated');
+        var downloadSubmissionsUrl = runtime.handlerUrl(element, 'download_submissions');
+        var downloadAllSubmissionsUrl = runtime.handlerUrl(element, 'download_all_submissions');
+        var enterGradeUrl = runtime.handlerUrl(element, 'enter_grade');
+        var removeGradeUrl = runtime.handlerUrl(element, 'remove_grade');
+        var template = _.template($(element).find("#sga-tmpl").text());
+        var gradingTemplate;
 
         function render(state) {
             // Add download urls to template context
             state.downloadUrl = downloadUrl;
             state.annotatedUrl = annotatedUrl;
             state.error = state.error ? state.error : false;
-            state.gradesPublished = options.gradesPublished;
 
             // Render template
             var content = $(element).find("#sga-content").html(template(state));
-
-            // Save grades published value when checkbox clicked
-            $('input[name=grades-published]', element).change(function() {
-                var url = updateGradesPublishedUrl + '?grades_published=' + this.checked;
-
-                $.get(url, function() {
-                    console.log('Student grade visibility updated.');
-                }).fail(function() {
-                    alert('Something went wrong. Please contact the support team.');
-                })
-            });
 
             // Set up file upload
             $(content).find(".fileupload").fileupload({
