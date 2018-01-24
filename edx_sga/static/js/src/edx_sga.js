@@ -143,13 +143,13 @@ function StaffGradedAssignmentXBlock(runtime, element) {
             });
 
             // Submission download variables
-            var $submissionCheckboxes = $(".submission-checkbox", element);
             var $submissionFilenames = $(".submission-filename", element);
-            var $downloadSelectedSubmissionsButton = $("button#download-selected-submissions", element);
-            var $downloadAllSubmissionsButton = $("button#download-all-submissions", element);
+            var $submissionCheckboxes = $(".submission-checkbox", element);
+            var $downloadSelectedSubmissionsButton = $(".download-selected-submissions", element);
+            var $downloadAllSubmissionsButton = $(".download-all-submissions", element);
 
-            // Set up submission download links, checkboxes and buttons
-            $submissionFilenames.on("click", function () {
+            // Set up events for submission download links, checkboxes and buttons
+            $submissionFilenames.off("click").on("click", function () {
                 showSubmissionDownloadedCheckmark($(this));
             });
             $submissionCheckboxes.on("change", function() {
@@ -160,13 +160,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                     $downloadSelectedSubmissionsButton.prop("disabled", true);
                 }
             });
-            if ($submissionCheckboxes.length > 0) {
-                $downloadAllSubmissionsButton.prop("disabled", false);
-            }
-            // Fix for "Download selected submissions" button when re-rendering SGA modal content
-            $submissionCheckboxes.trigger("change");
-
-            $downloadSelectedSubmissionsButton.on("click", function() {
+            $downloadSelectedSubmissionsButton.off("click").on("click", function() {
                 var student_ids = [];
                 $submissionCheckboxes.filter(":checked").each(function() {
                     var $submissionFilename = $(this).closest("tr").find(".submission-filename");
@@ -177,7 +171,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                     window.location = window.location.origin + data.zip_url;
                 });
             });
-            $downloadAllSubmissionsButton.on("click", function() {
+            $downloadAllSubmissionsButton.off("click").on("click", function() {
                 $submissionFilenames.each(function() {
                     showSubmissionDownloadedCheckmark($(this));
                 });
@@ -185,6 +179,13 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                     window.location = window.location.origin + data.zip_url;
                 });
             });
+
+            // Enable "Download all submissions" button if there are any submissions
+            if ($submissionCheckboxes.length > 0) {
+                $downloadAllSubmissionsButton.prop("disabled", false);
+            }
+            // Fix for "Download selected submissions" button when re-rendering SGA modal content
+            $submissionCheckboxes.trigger("change");
         }
 
         function showSubmissionDownloadedCheckmark($submissionFilename) {
