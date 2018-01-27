@@ -27,7 +27,7 @@ from submissions.models import StudentItem as SubmissionsStudent
 from webob.response import Response
 from xblock.core import XBlock
 from xblock.exceptions import JsonHandlerError
-from xblock.fields import DateTime, Scope, String, Float, Integer
+from xblock.fields import Boolean, DateTime, Float, Integer, Scope, String
 from xblock.fragment import Fragment
 from xmodule.util.duedate import get_extended_due_date
 
@@ -118,7 +118,15 @@ class StaffGradedAssignmentXBlock(XBlock):
         display_name="Timestamp",
         scope=Scope.user_state,
         default=None,
-        help="When the annotated file was uploaded")
+        help="When the annotated file was uploaded"
+    )
+
+    grades_published = Boolean(
+        display_name='Display grade to students',
+        scope=Scope.user_state_summary,
+        default=False,
+        help='Indicates if the grades will be displayed to students.'
+    )
 
     def max_score(self):
         return self.points
@@ -173,7 +181,8 @@ class StaffGradedAssignmentXBlock(XBlock):
         """
         context = {
             "student_state": json.dumps(self.student_state()),
-            "id": self.location.name.replace('.', '_')
+            "id": self.location.name.replace('.', '_'),
+            "grades_published": self.grades_published,
         }
         if self.show_staff_grading_interface():
             context['is_course_staff'] = True
@@ -188,7 +197,7 @@ class StaffGradedAssignmentXBlock(XBlock):
         )
         fragment.add_css(_resource("static/css/edx_sga.css"))
         fragment.add_javascript(_resource("static/js/src/edx_sga.js"))
-        fragment.initialize_js('StaffGradedAssignmentXBlock')
+        fragment.initialize_js('StaffGradedAssignmentXBlock', {'gradesPublished': self.grades_published})
         return fragment
 
     def update_staff_debug_context(self, context):
@@ -354,6 +363,11 @@ class StaffGradedAssignmentXBlock(XBlock):
         if points < 0:
             raise JsonHandlerError(400, 'Points must be a positive integer')
         self.points = points
+
+    @XBlock.handler
+    def update_grades_published(self, request, suffix=''):
+        self.grades_published = json.loads(request.params.get('grades_published'))
+        return Response(status=200)
 
     @XBlock.handler
     def upload_assignment(self, request, suffix=''):
