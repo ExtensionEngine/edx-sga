@@ -107,11 +107,11 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
               gradeFormError(data['error']);
             } else {
               gradeFormError('');
-              $('.grade-modal').hide();
+              $('.grade-modal', element).hide();
             }
 
             if (data.display_name !== '') {
-                $('.sga-block .display_name').html(data.display_name);
+                $('.sga-block .display_name', element).html(data.display_name);
             }
 
             // Add download urls to template context
@@ -220,7 +220,7 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
             form.find("#module_id-input").val(row.data("module_id"));
             form.find("#submission_id-input").val(row.data("submission_id"));
             form.find("#grade-input").val(row.data("score"));
-            form.find("#comment-input").text(row.data("comment"));
+            form.find("#comment-input").val(row.data("comment"));
             form.off("submit").on("submit", function(event) {
                 var max_score = row.parents("#grade-info").data("max_score");
                 var score = Number(form.find("#grade-input").val());
@@ -268,7 +268,7 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
                  * See: https://github.com/mitodl/edx-sga/issues/13
                  */
                 setTimeout(function() {
-                    $('#grade-submissions-button').click();
+                    $('#grade-submissions-button', element).click();
                     gradeFormError('');
                 }, 225);
             });
