@@ -247,9 +247,9 @@ class StaffGradedAssignmentXBlock(XBlock):
                 item_id=self.block_id)
             for student in students:
                 submission = self.get_submission(student.student_id)
-                if not submission:
-                    continue
                 user = user_by_anonymous_id(student.student_id)
+                if not submission or user.is_staff or user.is_superuser:
+                    continue
                 module, _ = StudentModule.objects.get_or_create(
                     course_id=self.course_id,
                     module_state_key=self.location,
@@ -474,9 +474,9 @@ class StaffGradedAssignmentXBlock(XBlock):
         submissions = []
         for student in students:
             submission_data = self.get_submission(student.student_id)
-            if submission_data:
+            user = user_by_anonymous_id(student.student_id)
+            if submission_data and not (user.is_staff or user.is_superuser):
                 self.set_submission_status_to_downloaded(student.student_id)
-                user = user_by_anonymous_id(student.student_id)
                 submissions.append({
                     'username': user.username,
                     'data': submission_data
