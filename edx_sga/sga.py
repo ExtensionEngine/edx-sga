@@ -124,7 +124,7 @@ class StaffGradedAssignmentXBlock(XBlock):
     grades_published = Boolean(
         display_name='Display grade to students',
         scope=Scope.user_state_summary,
-        default=False,
+        default=True,
         help='Indicates if the grades will be displayed to students.'
     )
 
