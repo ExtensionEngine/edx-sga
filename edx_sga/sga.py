@@ -66,13 +66,7 @@ class StaffGradedAssignmentXBlock(XBlock):
         help=("Defines the number of points each problem is worth. "
               "If the value is not set, the problem is worth the sum of the "
               "option point values."),
-        values={"min": 0, "step": .1},
-        scope=Scope.settings
-    )
-
-    points = Integer(
-        display_name="Maximum score",
-        help=("Maximum grade score given to assignment by staff."),
+        values={"min": 0, "step": 1},
         default=100,
         scope=Scope.settings
     )
@@ -129,7 +123,7 @@ class StaffGradedAssignmentXBlock(XBlock):
     )
 
     def max_score(self):
-        return self.points
+        return self.weight
 
     @reify
     def block_id(self):
@@ -326,7 +320,6 @@ class StaffGradedAssignmentXBlock(XBlock):
                 (field, none_to_empty(getattr(self, field.name)), validator)
                 for field, validator in (
                     (cls.display_name, 'string'),
-                    (cls.points, 'number'),
                     (cls.weight, 'number'))
             )
 
@@ -351,18 +344,6 @@ class StaffGradedAssignmentXBlock(XBlock):
     def save_sga(self, data, suffix=''):
         self.display_name = data.get('display_name', self.display_name)
         self.weight = data.get('weight', self.weight)
-
-        # Validate points before saving
-        points = data.get('points', self.points)
-        # Check that we are an int
-        try:
-            points = int(points)
-        except ValueError:
-            raise JsonHandlerError(400, 'Points must be an integer')
-        # Check that we are positive
-        if points < 0:
-            raise JsonHandlerError(400, 'Points must be a positive integer')
-        self.points = points
 
     @XBlock.handler
     def update_grades_published(self, request, suffix=''):
