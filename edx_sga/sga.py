@@ -123,7 +123,7 @@ class StaffGradedAssignmentXBlock(XBlock):
     )
 
     def max_score(self):
-        return self.weight
+        return self.weight or 100
 
     @reify
     def block_id(self):
@@ -177,6 +177,7 @@ class StaffGradedAssignmentXBlock(XBlock):
             "student_state": json.dumps(self.student_state()),
             "id": self.location.name.replace('.', '_'),
             "grades_published": self.grades_published,
+            "max_score": self.max_score(),
         }
         if self.show_staff_grading_interface():
             context['is_course_staff'] = True
