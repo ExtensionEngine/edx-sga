@@ -227,8 +227,6 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
                 event.preventDefault();
                 if (!score) {
                     gradeFormError('<br/>Grade must be a number.');
-                } else if (score !== parseInt(score)) {
-                    gradeFormError('<br/>Grade must be an integer.');
                 } else if (score < 0) {
                     gradeFormError('<br/>Grade must be positive.');
                 } else if (score > max_score) {
