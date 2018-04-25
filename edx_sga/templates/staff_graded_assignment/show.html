@@ -78,7 +78,11 @@
               </a>
             <% } %>
           </td>
-          <td><%= assignment.timestamp %></td>
+          <td>
+            <% if (assignment.timestamp) { %>
+              <%= moment.utc().local().format('MM/DD/YYYY hh:mma') %>
+            <% } %>
+          </td>
           <td>
             <% if (assignment.score !== null) { %>
               <%= assignment.score %> /
