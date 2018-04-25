@@ -80,7 +80,7 @@
           </td>
           <td>
             <% if (assignment.timestamp) { %>
-              <%= moment.utc().local().format('MM/DD/YYYY hh:mma') %>
+              <%= moment.utc(assignment.timestamp).local().format('MM/DD/YYYY hh:mma') %>
             <% } %>
           </td>
           <td>
