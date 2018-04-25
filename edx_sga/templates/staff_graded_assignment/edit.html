@@ -10,6 +10,7 @@
         <input class="input setting-input" type="text" 
                id="{{ field.name }}_input" name="{{ field.name}}" 
                value="{{ value }}" data-validator="{{ validator }}"/>
+        <span class="error" id="error-{{ field.name }}"></span>
       </div>
       <span class="tip setting-help">{{ field.help }}</span>
     </li>
