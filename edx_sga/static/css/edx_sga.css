@@ -69,7 +69,8 @@
     width: 100%;
 }
 
-.sga-block .error {
+.sga-block .error,
+#staff-graded-assignment-edit .error {
     color: red;
 }
 
