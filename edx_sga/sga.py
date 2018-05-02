@@ -71,14 +71,6 @@ class StaffGradedAssignmentXBlock(XBlock):
         scope=Scope.settings
     )
 
-    staff_score = Integer(
-        display_name="Score assigned by non-instructor staff",
-        help=("Score will need to be approved by instructor before being "
-              "published."),
-        default=None,
-        scope=Scope.settings
-    )
-
     comment = String(
         display_name="Instructor comment",
         default='',
@@ -255,13 +247,6 @@ class StaffGradedAssignmentXBlock(XBlock):
                     })
                 state = json.loads(module.state)
                 score = self.get_score(student.student_id)
-                approved = score is not None
-                if score is None:
-                    score = state.get('staff_score')
-                    needs_approval = score is not None
-                else:
-                    needs_approval = False
-                instructor = self.is_instructor()
                 downloaded = self.get_submission_download_status(student.student_id)
                 yield {
                     'module_id': module.id,
@@ -273,9 +258,6 @@ class StaffGradedAssignmentXBlock(XBlock):
                     'downloaded': downloaded,
                     'timestamp': str(submission['created_at']),
                     'score': score,
-                    'approved': approved,
-                    'needs_approval': instructor and needs_approval,
-                    'may_grade': instructor or not approved,
                     'annotated': state.get("annotated_filename"),
                     'comment': state.get("comment", ''),
                 }
@@ -299,9 +281,6 @@ class StaffGradedAssignmentXBlock(XBlock):
                 'downloaded': False,
                 'timestamp': None,
                 'score': None,
-                'approved': False,
-                'needs_approval': False,
-                'may_grade': False,
                 'annotated': None,
                 'comment': None,
             })
@@ -553,11 +532,8 @@ class StaffGradedAssignmentXBlock(XBlock):
                 )
             )
 
-        if self.is_instructor():
-            uuid = request.params['submission_id']
-            submissions_api.set_score(uuid, score, self.max_score())
-        else:
-            state['staff_score'] = score
+        uuid = request.params['submission_id']
+        submissions_api.set_score(uuid, score, self.max_score())
         state['comment'] = request.params.get('comment', '')
         module.state = json.dumps(state)
         module.save()
@@ -571,7 +547,6 @@ class StaffGradedAssignmentXBlock(XBlock):
         submissions_api.reset_score(student_id, unicode(self.course_id), unicode(self.block_id))
         module = StudentModule.objects.get(pk=request.params['module_id'])
         state = json.loads(module.state)
-        state['staff_score'] = None
         state['comment'] = ''
         state['annotated_sha1'] = None
         state['annotated_filename'] = None
@@ -586,10 +561,10 @@ class StaffGradedAssignmentXBlock(XBlock):
         return User.objects.get(id=self.xmodule_runtime.user_id)
 
     def is_course_staff(self):
-        return getattr(self.xmodule_runtime, 'user_is_staff', False)
-
-    def is_instructor(self):
-        return self.xmodule_runtime.get_user_role() == 'instructor'
+        return (
+            getattr(self.xmodule_runtime, 'user_is_staff', False) or
+            self.xmodule_runtime.get_user_role() == 'instructor'
+        )
 
     def show_staff_grading_interface(self):
         in_studio_preview = self.scope_ids.user_id is None

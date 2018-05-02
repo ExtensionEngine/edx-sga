@@ -87,9 +87,6 @@
             <% if (assignment.score !== null) { %>
               <%= assignment.score %> /
               <%= max_score %>
-              <% if (! assignment.approved) { %>
-                ({% trans "Awaiting instructor approval" %})
-              <% } %>
             <% } %>
           </td>
           <td><%= assignment.comment %></td>
@@ -101,15 +98,9 @@
             <% } %>
           </td>
           <td>
-            <% if (assignment.may_grade) { %>
-              <a class="enter-grade-button" href="#{{ id }}-enter-grade">
-                <% if (assignment.needs_approval) { %>
-                  {% trans "Approve grade" %}
-                <% } else { %>
-                  {% trans "Enter grade" %}
-                <% } %>
-              </a>
-            <% } %>
+            <a class="enter-grade-button" href="#{{ id }}-enter-grade">
+              {% trans "Enter grade" %}
+            </a>
           </td>
           <td>
             <div class="upload">
