@@ -54,6 +54,7 @@ class StaffGradedAssignmentXBlock(XBlock):
     """
     has_score = True
     icon_class = 'problem'
+    show_in_read_only_mode = True
 
     display_name = String(
         default='Staff Graded Assignment', scope=Scope.settings,
@@ -508,6 +509,17 @@ class StaffGradedAssignmentXBlock(XBlock):
             "error": "Please enter valid grade"
         }
 
+    def validate_score_over_max_message(self, course_id, username):
+        log.error(
+            "enter_grade: invalid grade (over max grade)submitted for course:%s module:%s student:%s",
+            course_id,
+            self.location,
+            username
+        )
+        return {
+            "error": "Please enter grade lower then {}".format(self.max_score())
+        }
+
     @XBlock.handler
     def enter_grade(self, request, suffix=''):
         require(self.is_course_staff())
@@ -533,6 +545,13 @@ class StaffGradedAssignmentXBlock(XBlock):
             )
 
         uuid = request.params['submission_id']
+        if score > self.max_score():
+            return Response(
+                json_body=self.validate_score_over_max_message(
+                    module.course_id,
+                    module.student.username
+                )
+            )
         submissions_api.set_score(uuid, score, self.max_score())
         state['comment'] = request.params.get('comment', '')
         module.state = json.dumps(state)
