@@ -535,7 +535,7 @@ class StaffGradedAssignmentXBlock(XBlock):
 
         state = json.loads(module.state)
         try:
-            score = int(score)
+            score = float(score)
         except ValueError:
             return Response(
                 json_body=self.validate_score_message(
