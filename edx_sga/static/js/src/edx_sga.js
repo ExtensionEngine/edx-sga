@@ -215,14 +215,16 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
         /* Click event handler for "enter grade" */
         function handleGradeEntry() {
             var row = $(this).parents("tr");
+            var state = JSON.parse(row.parents(".sga-block").attr("data-state"));
+            var max_score = state.max_score;
             var form = $(element).find("#enter-grade-form");
             $(element).find("#student-name").text(row.data("fullname"));
             form.find("#module_id-input").val(row.data("module_id"));
             form.find("#submission_id-input").val(row.data("submission_id"));
             form.find("#grade-input").val(row.data("score"));
+            form.find("#grade-input").attr('max', max_score);
             form.find("#comment-input").val(row.data("comment"));
             form.off("submit").on("submit", function(event) {
-                var max_score = row.parents("#grade-info").data("weight");
                 var score = Number(form.find("#grade-input").val());
                 event.preventDefault();
                 if (!score) {
