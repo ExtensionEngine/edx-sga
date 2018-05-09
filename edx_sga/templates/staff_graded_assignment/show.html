@@ -7,7 +7,7 @@
       <p><b>File uploaded</b>
         <a href="<%= downloadUrl %>"><%= uploaded.filename %></a></p>
     <% } else { %>
-      <p>No file has been uploaded.<br/>Your score is 0 / <%= max_score %></p>
+      <p>No file has been uploaded.</p>
     <% } %>
     <% if (graded && gradesPublished) { %>
       <p>Your score is <%= graded.score %> / <%= max_score %><br/>
@@ -20,7 +20,7 @@
         <% } %>
       </p>
     <% } else if (uploaded) { %>
-      {% trans "This assignment has not yet been graded.<br/>Your score is 0 / <%= max_score %>" %}
+      {% trans "This assignment has not yet been graded." %}
     <% } %>
     <% if (upload_allowed) { %>
     <p>
