@@ -73,10 +73,12 @@
     width: 100%;
 }
 
-.sga-block .error,
-#staff-graded-assignment-edit .error {
+.sga-block .error {
+    display: block;
     color: red;
 }
+
+.sga-block .error
 
 .sga-block .grades-published,
 .sga-block .download-buttons {

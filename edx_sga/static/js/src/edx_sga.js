@@ -125,7 +125,7 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
 
             // Map data to table rows
             data.assignments.map(function(assignment) {
-                $(element).find("#grade-info #row-" + assignment.module_id)
+                $(element).find("#grade-info #row-" + assignment.student_id)
                     .data(assignment);
             });
 
@@ -221,6 +221,7 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
             $(element).find("#student-name").text(row.data("fullname"));
             form.find("#module_id-input").val(row.data("module_id"));
             form.find("#submission_id-input").val(row.data("submission_id"));
+            form.find("#student_id-input").val(row.data("student_id"));
             form.find("#grade-input").val(row.data("score"));
             form.find("#grade-input").attr('max', max_score);
             form.find("#comment-input").val(row.data("comment"));
@@ -228,15 +229,20 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
                 var score = Number(form.find("#grade-input").val());
                 event.preventDefault();
                 if (!score && score != 0) {
-                    gradeFormError('<br/>Grade must be a number.');
+                    gradeFormError('Grade must be a number.');
                 } else if (score < 0) {
-                    gradeFormError('<br/>Grade must be positive.');
+                    gradeFormError('Grade must be positive.');
                 } else if (score > max_score) {
-                    gradeFormError('<br/>Maximum score is ' + max_score);
+                    gradeFormError('Maximum score is ' + max_score);
                 } else {
-                    // No errors
-                    $.post(enterGradeUrl, form.serialize())
-                        .success(renderStaffGrading);
+                    $.ajax({
+                        url: enterGradeUrl,
+                        data: form.serialize(),
+                        success: renderStaffGrading,
+                        error: function(error) {
+                            gradeFormError(error.responseJSON.error);
+                        }
+                    });
                 }
             });
             form.find('#remove-grade').on('click', function(event) {
@@ -249,7 +255,7 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
                   gradeFormError('');
                   $.get(url).success(renderStaffGrading);
                 } else {
-                    gradeFormError('<br/>No grade to remove.');
+                    gradeFormError('No grade to remove.');
                 }
             });
             form.find("#enter-grade-cancel").on("click", function() {
