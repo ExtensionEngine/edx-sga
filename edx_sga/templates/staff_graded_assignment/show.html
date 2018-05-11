@@ -98,7 +98,8 @@
             <% } %>
           </td>
           <td>
-            <button class="enter-grade-button" href="#{{ id }}-enter-grade">
+            <% var disabled = (!passed_due && !assignment.submission_id) ? 'disabled' : ''; %>
+            <button class="enter-grade-button" href="#{{ id }}-enter-grade" <%= disabled %>>
               {% trans "Enter grade" %}
             </button>
           </td>
