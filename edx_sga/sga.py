@@ -21,7 +21,7 @@ from django.core.files import File
 from django.core.files.storage import default_storage
 from django.template import Context, Template
 from functools import partial
-from student.models import CourseEnrollment, user_by_anonymous_id
+from student.models import CourseEnrollment, anonymous_id_for_user, user_by_anonymous_id
 from submissions import api as submissions_api
 from submissions.models import StudentItem as SubmissionsStudent
 from webob.response import Response
@@ -289,6 +289,7 @@ class StaffGradedAssignmentXBlock(XBlock):
         return {
             'assignments': assignments,
             'max_score': self.max_score(),
+            'passed_due': self.past_due(),
         }
 
     def studio_view(self, context=None):
@@ -464,11 +465,12 @@ class StaffGradedAssignmentXBlock(XBlock):
         files = []
         for submission in submissions:
             answer = submission['data']['answer']
-            path = self._file_storage_path(answer['sha1'], answer['filename'])
-            files.append({
-                'path': default_storage.path(path),
-                'name': '{}-{}'.format(submission['username'], answer['filename'])
-            })
+            if answer['filename']:
+                path = self._file_storage_path(answer['sha1'], answer['filename'])
+                files.append({
+                    'path': default_storage.path(path),
+                    'name': '{}-{}'.format(submission['username'], answer['filename'])
+                })
         return files
 
     def download_zip(self, student_files):
@@ -520,11 +522,57 @@ class StaffGradedAssignmentXBlock(XBlock):
             "error": "Please enter grade lower then {}".format(self.max_score())
         }
 
+    def create_empty_submission(self, student_id):
+        answer = {
+            "sha1": None,
+            "filename": None,
+            "mimetype": None,
+        }
+        student_item_dict = self.student_submission_id(student_id)
+        return submissions_api.create_submission(student_item_dict, answer)
+
+    def create_empty_student_module(self, student):
+        return StudentModule.objects.create(
+            course_id=self.course_id,
+            module_state_key=self.location,
+            student=student,
+            state=json.dumps({
+                'comment': '',
+                'annotated_sha1': None,
+                'annotated_filename': None,
+                'annotated_mimetype': None,
+                'annotated_timestamp': None,
+            }),
+            module_type=self.category
+        )
+
     @XBlock.handler
     def enter_grade(self, request, suffix=''):
         require(self.is_course_staff())
-        score = request.params.get('grade', None)
-        module = StudentModule.objects.get(pk=request.params['module_id'])
+        score = request.params.get('grade')
+        uuid = request.params.get('submission_id')
+        module_id = request.params.get('module_id')
+        student_id = request.params.get('student_id')
+
+        if module_id:
+            module = StudentModule.objects.get(pk=module_id)
+        elif self.past_due():  # We allow grading student who haven't made a submission past due date.
+            try:
+                student_id = int(student_id)
+                student = User.objects.get(id=student_id)
+                student_id = anonymous_id_for_user(student, self.course_id)
+            except ValueError:
+                student = user_by_anonymous_id(student_id)
+            module = self.create_empty_student_module(student)
+            uuid = self.create_empty_submission(student_id)['uuid']
+        else:
+            msg = 'Module ID not provided.'
+            log.error('SGA submission failed for {student_id}: {msg}'.format(
+                student_id=student_id,
+                msg=msg
+            ))
+            return Response(status=400, json_body={'error': msg})
+
         if not score:
             return Response(
                 json_body=self.validate_score_message(
@@ -544,7 +592,6 @@ class StaffGradedAssignmentXBlock(XBlock):
                 )
             )
 
-        uuid = request.params['submission_id']
         if score > self.max_score():
             return Response(
                 json_body=self.validate_score_over_max_message(

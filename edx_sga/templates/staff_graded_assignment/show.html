@@ -61,7 +61,7 @@
         var assignment = assignments[i],
             submissionUrl = downloadUrl + '?student_id=' + assignment.student_id;
       %>
-        <tr id="row-<%= assignment.module_id %>">
+        <tr id="row-<%= assignment.student_id %>">
           <td>
             <% if (assignment.filename) { %>
               <input type="checkbox" class="submission-checkbox" value="<%= assignment.student_id %>">
@@ -98,9 +98,10 @@
             <% } %>
           </td>
           <td>
-            <a class="enter-grade-button" href="#{{ id }}-enter-grade">
+            <% var disabled = (!passed_due && !assignment.submission_id) ? 'disabled' : ''; %>
+            <button class="enter-grade-button" href="#{{ id }}-enter-grade" <%= disabled %>>
               {% trans "Enter grade" %}
-            </a>
+            </button>
           </td>
           <td>
             <div class="upload">
@@ -175,6 +176,7 @@
         <form id="enter-grade-form">
           <input id="module_id-input" type="hidden" name="module_id"/>
           <input id="submission_id-input" type="hidden" name="submission_id"/>
+          <input id="student_id-input" type="hidden" name="student_id"/>
           <div>Grade for <span id="student-name"/></div>
           <div>Grade: <input type="number" step="0.01" min="0" id="grade-input" name="grade"/>
             <span class="error"></span></div>
