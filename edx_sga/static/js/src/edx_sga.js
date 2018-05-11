@@ -227,7 +227,7 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
             form.off("submit").on("submit", function(event) {
                 var score = Number(form.find("#grade-input").val());
                 event.preventDefault();
-                if (!score) {
+                if (!score && score != 0) {
                     gradeFormError('<br/>Grade must be a number.');
                 } else if (score < 0) {
                     gradeFormError('<br/>Grade must be positive.');
