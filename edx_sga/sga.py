@@ -557,7 +557,7 @@ class StaffGradedAssignmentXBlock(XBlock):
 
         if module_id:
             module = StudentModule.objects.get(pk=module_id)
-        elif self.past_due():  # We allow grading student who haven't made a submission past due date.
+        elif self.past_due() or not self.has_due:  # We allow grading student who haven't made a submission past due date.
             try:
                 student_id = int(student_id)
                 student = User.objects.get(id=student_id)
