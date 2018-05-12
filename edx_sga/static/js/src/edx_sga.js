@@ -240,7 +240,11 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
                         data: form.serialize(),
                         success: renderStaffGrading,
                         error: function(error) {
-                            gradeFormError(error.responseJSON.error);
+                            if (error.responseJSON && error.responseJSON.error) {
+                                gradeFormError(error.responseJSON.error);
+                            } else {
+                                gradeFormError('Something went wrong.');
+                            }
                         }
                     });
                 }
