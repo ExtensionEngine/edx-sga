@@ -289,6 +289,7 @@ class StaffGradedAssignmentXBlock(XBlock):
         return {
             'assignments': assignments,
             'max_score': self.max_score(),
+            'has_due': self.has_due,
             'passed_due': self.past_due(),
         }
 
@@ -635,6 +636,10 @@ class StaffGradedAssignmentXBlock(XBlock):
     def show_staff_grading_interface(self):
         in_studio_preview = self.scope_ids.user_id is None
         return self.is_course_staff() and not in_studio_preview
+
+    @property
+    def has_due(self):
+        return True if get_extended_due_date(self) else False
 
     def past_due(self):
         due = get_extended_due_date(self)
