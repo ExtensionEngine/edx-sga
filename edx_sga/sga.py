@@ -323,6 +323,14 @@ class StaffGradedAssignmentXBlock(XBlock):
             log.error("Don't swallow my exceptions", exc_info=True)
             raise
 
+    def update_weight(self, weight):
+        """Set the new weight value and update all previous CSM's."""
+        self.weight = weight
+        StudentModule.objects.filter(
+            course_id=self.course_id,
+            module_state_key=self.location
+        ).update(max_grade=self.weight)
+
     @XBlock.json_handler
     def save_sga(self, data, suffix=''):
         self.display_name = data.get('display_name', self.display_name)
@@ -341,7 +349,7 @@ class StaffGradedAssignmentXBlock(XBlock):
                 )
         else:
             raise JsonHandlerError(400, 'Weight is a required field')
-        self.weight = weight
+        self.update_weight(weight)
 
     @XBlock.handler
     def update_grades_published(self, request, suffix=''):
