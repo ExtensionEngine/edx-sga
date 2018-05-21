@@ -563,6 +563,9 @@ class StaffGradedAssignmentXBlock(XBlock):
         module_id = request.params.get('module_id')
         student_id = request.params.get('student_id')
 
+        if not score:
+            return Response(status=400, json_body={'error': 'Please enter a valid grade.'})
+
         if module_id:
             module = StudentModule.objects.get(pk=module_id)
         elif self.past_due() or not self.has_due:  # We allow grading student who haven't made a submission past due date.
@@ -581,14 +584,6 @@ class StaffGradedAssignmentXBlock(XBlock):
                 msg=msg
             ))
             return Response(status=400, json_body={'error': msg})
-
-        if not score:
-            return Response(
-                json_body=self.validate_score_message(
-                    module.course_id,
-                    module.student.username
-                )
-            )
 
         state = json.loads(module.state)
         try:

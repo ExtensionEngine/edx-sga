@@ -226,8 +226,15 @@ function StaffGradedAssignmentXBlock(runtime, element, options) {
             form.find("#grade-input").attr('max', max_score);
             form.find("#comment-input").val(row.data("comment"));
             form.off("submit").on("submit", function(event) {
-                var score = Number(form.find("#grade-input").val());
                 event.preventDefault();
+                var scoreInput = form.find("#grade-input").val();
+
+                if (!scoreInput) {
+                    gradeFormError('Grade cannot be empty.');
+                    return;
+                }
+
+                var score = Number(scoreInput);
                 if (!score && score != 0) {
                     gradeFormError('Grade must be a number.');
                 } else if (score < 0) {
