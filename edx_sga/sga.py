@@ -249,7 +249,9 @@ class StaffGradedAssignmentXBlock(XBlock):
             }
 
     def staff_grading_data(self):
-        def get_student_data(enrolled_students=[]):
+        def get_student_data(enrolled_students = None):
+            if not enrolled_students:
+                enrolled_students = []
             # Submissions doesn't have API for this, just use model directly
             students = SubmissionsStudent.objects.filter(
                 course_id=self.course_id,
