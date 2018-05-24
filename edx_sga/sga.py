@@ -161,6 +161,11 @@ class StaffGradedAssignmentXBlock(XBlock):
     def score(self):
         return self.get_score()
 
+    def get_enrolled_students(self):
+        return list(CourseEnrollment.objects.users_enrolled_in(self.course_id).exclude(
+                Q(is_staff=True) | Q(is_superuser=True)
+            ))
+
     def student_view(self, context=None):
         """
         The primary view of the StaffGradedAssignmentXBlock, shown to students
@@ -228,18 +233,32 @@ class StaffGradedAssignmentXBlock(XBlock):
         }
 
     def staff_grading_data(self):
+        def generate_student_data(module_id=None, student_id=None, submission_id=None, username=None, 
+            fullname=None, filename=None, downloaded=None, timestamp=None, score=None, annotated=None, comment=None):
+            return {
+                    'module_id': module_id,
+                    'student_id': student_id,
+                    'submission_id': submission_id,
+                    'username': username,
+                    'fullname': fullname,
+                    'filename': filename,
+                    'downloaded': downloaded,
+                    'timestamp': timestamp,
+                    'score': score,
+                    'annotated': annotated,
+                    'comment': comment,
+                }
         def get_student_data(enrolled_students=[]):
             # Submissions doesn't have API for this, just use model directly
             students = SubmissionsStudent.objects.filter(
                 course_id=self.course_id,
                 item_id=self.block_id)
+            submitted_student_data = []
             for student in students:
                 user = user_by_anonymous_id(student.student_id)
                 if not user in enrolled_students:
-                    # skip users that aren't enrolled
                     continue
                 else:
-                    # remove users that are enrolled and also have submissions 
                     enrolled_students.remove(user)
 
                 submission = self.get_submission(student.student_id)
@@ -254,40 +273,29 @@ class StaffGradedAssignmentXBlock(XBlock):
                         'module_type': self.category,
                     })
                 state = json.loads(module.state)
-                yield {
-                    'module_id': module.id,
-                    'student_id': student.student_id,
-                    'submission_id': submission['uuid'],
-                    'username': module.student.username,
-                    'fullname': module.student.profile.name,
-                    'filename': submission['answer']["filename"],
-                    'downloaded': self.get_submission_download_status(student.student_id),
-                    'timestamp': str(submission['created_at']),
-                    'score': self.get_score(student.student_id),
-                    'annotated': state.get("annotated_filename"),
-                    'comment': state.get("comment", ''),
-                }
+                submitted_student_data.append(generate_student_data(
+                    module_id=module.id,
+                    student_id=student.student_id,
+                    submission_id=submission['uuid'],
+                    username=module.student.username,
+                    fullname=module.student.profile.name,
+                    filename=submission['answer']["filename"],
+                    downloaded=self.get_submission_download_status(student.student_id),
+                    timestamp=str(submission['created_at']),
+                    score=self.get_score(student.student_id),
+                    annotated=state.get("annotated_filename"),
+                    comment=state.get("comment", '')
+                ))
             # remaining students are those without submissions
             for student in enrolled_students:
-                yield {
-                    'module_id': None,
-                    'student_id': student.id,
-                    'submission_id': None,
-                    'username': student.username,
-                    'fullname': student.profile.name,
-                    'filename': None,
-                    'downloaded': False,
-                    'timestamp': None,
-                    'score': None,
-                    'annotated': None,
-                    'comment': None,
-                }
+                submitted_student_data.append(generate_student_data(
+                    student_id=student.id,
+                    username=student.username,
+                    fullname=student.profile.name
+                ))
+            return submitted_student_data
 
-        enrolled_students = list(CourseEnrollment.objects.users_enrolled_in(self.course_id).exclude(
-            Q(is_staff=True) | Q(is_superuser=True)
-        ))
-
-        submitted_student_data = list(get_student_data(enrolled_students))
+        submitted_student_data = get_student_data(self.get_enrolled_students())
 
         return {
             'assignments': submitted_student_data,
@@ -461,10 +469,8 @@ class StaffGradedAssignmentXBlock(XBlock):
     def get_submissions(self, student_ids=None):
         all_students = SubmissionsStudent.objects.filter(course_id=self.course_id, item_id=self.block_id)
         students = all_students.filter(student_id__in=student_ids) if student_ids else all_students
-        if student_ids is None:
-            enrolled_students = list(CourseEnrollment.objects.users_enrolled_in(self.course_id).exclude(
-                Q(is_staff=True) | Q(is_superuser=True)
-            ))
+        if not student_ids:
+            enrolled_students = self.get_enrolled_students()
         submissions = []
         for student in students:
             user = user_by_anonymous_id(student.student_id)
