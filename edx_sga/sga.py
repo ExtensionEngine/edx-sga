@@ -252,39 +252,28 @@ class StaffGradedAssignmentXBlock(XBlock):
         def get_student_data(enrolled_students = None):
             if not enrolled_students:
                 enrolled_students = []
-            # Submissions doesn't have API for this, just use model directly
-            students = SubmissionsStudent.objects.filter(
-                course_id=self.course_id,
-                item_id=self.block_id)
+
             submitted_student_data = []
-            for student in students:
-                user = user_by_anonymous_id(student.student_id)
-                if not user in enrolled_students:
-                    continue
-                else:
-                    enrolled_students.remove(user)
+            for user in enrolled_students:
+                module = None
+                submission = None
+                user.student_id = anonymous_id_for_user(user, self.course_id, save=False)
+                submission = self.get_submission(user.student_id)
+                if submission:
+                    module, _ = StudentModule.objects.get_or_create(
+                        course_id=self.course_id,
+                        module_state_key=self.location,
+                        student=user,
+                        defaults={
+                            'state': '{}',
+                            'module_type': self.category,
+                        })
 
-                submission = self.get_submission(student.student_id)
-                if not submission or user.is_staff or user.is_superuser:
-                    continue
-                module, _ = StudentModule.objects.get_or_create(
-                    course_id=self.course_id,
-                    module_state_key=self.location,
-                    student=user,
-                    defaults={
-                        'state': '{}',
-                        'module_type': self.category,
-                    })
-
-                
                 submitted_student_data.append(self.generate_student_data(
                     module = module, 
-                    student = student, 
+                    student = user, 
                     submission = submission
                 ))
-
-            for student in enrolled_students:
-                submitted_student_data.append(self.generate_student_data(student = student))
 
             return submitted_student_data
 
