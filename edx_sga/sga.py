@@ -170,7 +170,7 @@ class StaffGradedAssignmentXBlock(XBlock):
             "student_state": json.dumps(self.student_state()),
             "id": self.location.name.replace('.', '_'),
             "grades_published": self.grades_published,
-            "max_score": self.max_score(),
+            "max_score": '{:.2f}'.format(self.max_score()),
         }
         if self.show_staff_grading_interface():
             context['is_course_staff'] = True
@@ -288,7 +288,7 @@ class StaffGradedAssignmentXBlock(XBlock):
 
         return {
             'assignments': assignments,
-            'max_score': self.max_score(),
+            'max_score': '{:.2f}'.format(self.max_score()),
             'has_due': self.has_due,
             'passed_due': self.past_due(),
         }
