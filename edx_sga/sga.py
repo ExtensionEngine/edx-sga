@@ -236,7 +236,6 @@ class StaffGradedAssignmentXBlock(XBlock):
         submitted_student_data = []
         for user in self.get_enrolled_students():
             module = None
-            submission = None
             user.student_id = anonymous_id_for_user(user, self.course_id, save=False)
             submission = self.get_submission(user.student_id)
             if submission:
