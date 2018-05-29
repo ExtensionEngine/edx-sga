@@ -232,22 +232,6 @@ class StaffGradedAssignmentXBlock(XBlock):
             "upload_allowed": self.upload_allowed(),
         }
 
-    def generate_student_data(self, module = None, student = None, submission = None):
-        state = json.loads(module.state) if module else None
-        return {
-                'module_id': module.id if module else None,
-                'student_id': student.student_id if student and hasattr(student, 'student_id') else student.id,
-                'submission_id': submission['uuid'] if submission else None,
-                'username': module.student.username if module else student.username,
-                'fullname': module.student.profile.name if module else student.profile.name,
-                'filename': submission['answer']["filename"] if submission else None,
-                'downloaded': self.get_submission_download_status(student.student_id) if student and hasattr(student, 'student_id') else None,
-                'timestamp': str(submission['created_at']) if submission else None,
-                'score': self.get_score(student.student_id) if student and hasattr(student, 'student_id') else None,
-                'annotated': state.get("annotated_filename") if state else None,
-                'comment': state.get("comment", '') if state else None,
-            }
-
     def staff_grading_data(self):
         submitted_student_data = []
         for user in self.get_enrolled_students():
