@@ -236,8 +236,8 @@ class StaffGradedAssignmentXBlock(XBlock):
         submitted_student_data = []
         for user in self.get_enrolled_students():
             module = None
-            user.student_id = anonymous_id_for_user(user, self.course_id, save=False)
-            submission = self.get_submission(user.student_id)
+            student_id = anonymous_id_for_user(user, self.course_id)
+            submission = self.get_submission(student_id)
             if submission:
                 module, _ = StudentModule.objects.get_or_create(
                     course_id=self.course_id,
@@ -247,19 +247,19 @@ class StaffGradedAssignmentXBlock(XBlock):
                         'state': '{}',
                         'module_type': self.category,
                     })
-            state = json.loads(module.state) if module else None
+            state = json.loads(module.state) if module else {}
             submitted_student_data.append({
                 'module_id': module.id if module else None,
-                'student_id': user.student_id if user and hasattr(user, 'student_id') else user.id,
+                'student_id': student_id,
                 'submission_id': submission['uuid'] if submission else None,
                 'username': user.username,
                 'fullname': user.profile.name,
                 'filename': submission['answer']["filename"] if submission else None,
-                'downloaded': self.get_submission_download_status(user.student_id) if user and hasattr(user, 'student_id') else None,
+                'downloaded': self.get_submission_download_status(student_id),
                 'timestamp': str(submission['created_at']) if submission else None,
-                'score': self.get_score(user.student_id) if user and hasattr(user, 'student_id') else None,
-                'annotated': state.get("annotated_filename") if state else None,
-                'comment': state.get("comment", '') if state else None,
+                'score': self.get_score(student_id),
+                'annotated': state.get("annotated_filename"),
+                'comment': state.get("comment", ''),
             })
 
         return {
