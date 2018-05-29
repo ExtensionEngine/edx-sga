@@ -162,9 +162,9 @@ class StaffGradedAssignmentXBlock(XBlock):
         return self.get_score()
 
     def get_enrolled_students(self):
-        return list(CourseEnrollment.objects.users_enrolled_in(self.course_id).exclude(
+        return CourseEnrollment.objects.users_enrolled_in(self.course_id).exclude(
                 Q(is_staff=True) | Q(is_superuser=True)
-            ))
+            )
 
     def student_view(self, context=None):
         """
@@ -249,35 +249,35 @@ class StaffGradedAssignmentXBlock(XBlock):
             }
 
     def staff_grading_data(self):
-        def get_student_data(enrolled_students = None):
-            if not enrolled_students:
-                enrolled_students = []
-
-            submitted_student_data = []
-            for user in enrolled_students:
-                module = None
-                submission = None
-                user.student_id = anonymous_id_for_user(user, self.course_id, save=False)
-                submission = self.get_submission(user.student_id)
-                if submission:
-                    module, _ = StudentModule.objects.get_or_create(
-                        course_id=self.course_id,
-                        module_state_key=self.location,
-                        student=user,
-                        defaults={
-                            'state': '{}',
-                            'module_type': self.category,
-                        })
-
-                submitted_student_data.append(self.generate_student_data(
-                    module = module, 
-                    student = user, 
-                    submission = submission
-                ))
-
-            return submitted_student_data
-
-        submitted_student_data = get_student_data(self.get_enrolled_students())
+        submitted_student_data = []
+        for user in self.get_enrolled_students():
+            module = None
+            submission = None
+            user.student_id = anonymous_id_for_user(user, self.course_id, save=False)
+            submission = self.get_submission(user.student_id)
+            if submission:
+                module, _ = StudentModule.objects.get_or_create(
+                    course_id=self.course_id,
+                    module_state_key=self.location,
+                    student=user,
+                    defaults={
+                        'state': '{}',
+                        'module_type': self.category,
+                    })
+            state = json.loads(module.state) if module else None
+            submitted_student_data.append({
+                'module_id': module.id if module else None,
+                'student_id': user.student_id if user and hasattr(user, 'student_id') else user.id,
+                'submission_id': submission['uuid'] if submission else None,
+                'username': module.student.username if module else user.username,
+                'fullname': module.student.profile.name if module else user.profile.name,
+                'filename': submission['answer']["filename"] if submission else None,
+                'downloaded': self.get_submission_download_status(user.student_id) if user and hasattr(user, 'student_id') else None,
+                'timestamp': str(submission['created_at']) if submission else None,
+                'score': self.get_score(user.student_id) if user and hasattr(user, 'student_id') else None,
+                'annotated': state.get("annotated_filename") if state else None,
+                'comment': state.get("comment", '') if state else None,
+            })
 
         return {
             'assignments': submitted_student_data,
