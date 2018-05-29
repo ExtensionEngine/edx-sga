@@ -161,6 +161,11 @@ class StaffGradedAssignmentXBlock(XBlock):
     def score(self):
         return self.get_score()
 
+    def get_enrolled_students(self):
+        return CourseEnrollment.objects.users_enrolled_in(self.course_id).exclude(
+                Q(is_staff=True) | Q(is_superuser=True)
+            )
+
     def student_view(self, context=None):
         """
         The primary view of the StaffGradedAssignmentXBlock, shown to students
@@ -228,16 +233,12 @@ class StaffGradedAssignmentXBlock(XBlock):
         }
 
     def staff_grading_data(self):
-        def get_student_data():
-            # Submissions doesn't have API for this, just use model directly
-            students = SubmissionsStudent.objects.filter(
-                course_id=self.course_id,
-                item_id=self.block_id)
-            for student in students:
-                submission = self.get_submission(student.student_id)
-                user = user_by_anonymous_id(student.student_id)
-                if not submission or user.is_staff or user.is_superuser:
-                    continue
+        submitted_student_data = []
+        for user in self.get_enrolled_students():
+            module = None
+            student_id = anonymous_id_for_user(user, self.course_id)
+            submission = self.get_submission(student_id)
+            if submission:
                 module, _ = StudentModule.objects.get_or_create(
                     course_id=self.course_id,
                     module_state_key=self.location,
@@ -246,48 +247,23 @@ class StaffGradedAssignmentXBlock(XBlock):
                         'state': '{}',
                         'module_type': self.category,
                     })
-                state = json.loads(module.state)
-                score = self.get_score(student.student_id)
-                downloaded = self.get_submission_download_status(student.student_id)
-                yield {
-                    'module_id': module.id,
-                    'student_id': student.student_id,
-                    'submission_id': submission['uuid'],
-                    'username': module.student.username,
-                    'fullname': module.student.profile.name,
-                    'filename': submission['answer']["filename"],
-                    'downloaded': downloaded,
-                    'timestamp': str(submission['created_at']),
-                    'score': score,
-                    'annotated': state.get("annotated_filename"),
-                    'comment': state.get("comment", ''),
-                }
-
-        enrolled_students = CourseEnrollment.objects.users_enrolled_in(self.course_id).exclude(
-            Q(is_staff=True) | Q(is_superuser=True)
-        )
-        submitted_student_data = list(get_student_data())
-        submitted_student_ids = list(map((lambda x: user_by_anonymous_id(x['student_id']).id), submitted_student_data))
-        not_submitted_students = enrolled_students.exclude(id__in=submitted_student_ids)
-
-        assignments = submitted_student_data
-        for student in not_submitted_students:
-            assignments.append({
-                'module_id': None,
-                'student_id': student.id,
-                'submission_id': None,
-                'username': student.username,
-                'fullname': student.profile.name,
-                'filename': None,
-                'downloaded': False,
-                'timestamp': None,
-                'score': None,
-                'annotated': None,
-                'comment': None,
+            state = json.loads(module.state) if module else {}
+            submitted_student_data.append({
+                'module_id': module.id if module else None,
+                'student_id': student_id,
+                'submission_id': submission['uuid'] if submission else None,
+                'username': user.username,
+                'fullname': user.profile.name,
+                'filename': submission['answer']["filename"] if submission else None,
+                'downloaded': self.get_submission_download_status(student_id),
+                'timestamp': str(submission['created_at']) if submission else None,
+                'score': self.get_score(student_id),
+                'annotated': state.get("annotated_filename"),
+                'comment': state.get("comment", ''),
             })
 
         return {
-            'assignments': assignments,
+            'assignments': submitted_student_data,
             'max_score': '{:.2f}'.format(self.max_score()),
             'has_due': self.has_due,
             'passed_due': self.past_due(),
@@ -458,10 +434,14 @@ class StaffGradedAssignmentXBlock(XBlock):
     def get_submissions(self, student_ids=None):
         all_students = SubmissionsStudent.objects.filter(course_id=self.course_id, item_id=self.block_id)
         students = all_students.filter(student_id__in=student_ids) if student_ids else all_students
+        if not student_ids:
+            enrolled_students = self.get_enrolled_students()
         submissions = []
         for student in students:
-            submission_data = self.get_submission(student.student_id)
             user = user_by_anonymous_id(student.student_id)
+            if student_ids is None and not user in enrolled_students:
+                continue
+            submission_data = self.get_submission(student.student_id)
             if submission_data and not (user.is_staff or user.is_superuser):
                 self.set_submission_status_to_downloaded(student.student_id)
                 submissions.append({
